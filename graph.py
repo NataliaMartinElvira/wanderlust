@@ -67,7 +67,8 @@ vm_f = bandpass_vm(ax, ay, az)
 original_peaks_i = detect_peaks(vm_f)
 
 # 4. Aplicar el Ajuste Controversial (El punto clave del diagnóstico)
-corrected_peaks_i = original_peaks_i[::2] if len(original_peaks_i) > 1 else original_peaks_i
+#corrected_peaks_i = original_peaks_i[::2] if len(original_peaks_i) > 1 else original_peaks_i
+corrected_peaks_i = original_peaks_i
 
 # --- PLOTEO ---
 plt.figure(figsize=(14, 6))
