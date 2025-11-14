@@ -1,0 +1,135 @@
+#include <Wire.h>
+#include <ICM20948_WE.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include "freertos/FreeRTOS.h" 
+#include "freertos/task.h" 
+#include "esp_task_wdt.h"
+
+// --------------------------------------------------------------------------
+// HUZZAH32 V3 + ICM20948 BLE STREAM
+// --------------------------------------------------------------------------
+#define NODE_ID 1 
+const char* deviceName = "ESP32_IMU_NODE_1"; 
+#define SERVICE_UUID "4FAF0C20-1FB5-459E-8AF2-EAC540000001" 
+#define SENSOR_CHAR_UUID "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
+
+// ------------------- I2C pins -------------------
+#define I2C_SDA 21
+#define I2C_SCL 22
+#define ICM20948_ADDR 0x68
+
+ICM20948_WE myIMU(ICM20948_ADDR);
+
+// ------------------- BLE -------------------
+struct struct_message {
+    int id;
+    unsigned long timestamp;
+    float acc_x;
+    float acc_y;
+    float acc_z;
+    float pitch;
+    float roll;
+    float gyr_x;
+    float gyr_y;
+    float gyr_z;
+};
+
+struct_message myData;
+BLECharacteristic *pSensorCharacteristic;
+BLEServer *pServer = nullptr;
+
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) { Serial.println("Client connected"); }
+    void onDisconnect(BLEServer* pServer) {
+        Serial.println("Client disconnected. Restarting advertising...");
+        BLEDevice::startAdvertising(); 
+    }
+};
+
+void setup() {
+    Serial.begin(115200);
+
+    // --------------------- Disable TWDT ---------------------
+    esp_task_wdt_deinit();
+    Serial.println("TWDT disabled.");
+
+    delay(2000); // startup delay
+
+    // --------------------- I2C + IMU init ---------------------
+    Wire.begin(I2C_SDA, I2C_SCL);
+    delay(200);
+
+    if (!myIMU.init()) {
+        Serial.println("IMU not found! Check wiring.");
+        while (true) { delay(1000); }
+    }
+
+    myIMU.setAccRange(ICM20948_ACC_RANGE_2G);
+    myIMU.setGyrRange(ICM20948_GYRO_RANGE_250);
+    myIMU.setAccDLPF(ICM20948_DLPF_6);
+    myIMU.setGyrDLPF(ICM20948_DLPF_6);
+
+    Serial.println("IMU initialized successfully.");
+
+    // --------------------- BLE server ---------------------
+    BLEDevice::init(deviceName);
+    pServer = BLEDevice::createServer(); 
+    pServer->setCallbacks(new MyServerCallbacks());
+
+    BLEService *pService = pServer->createService(BLEUUID(SERVICE_UUID));
+    
+    pSensorCharacteristic = pService->createCharacteristic(
+        BLEUUID(SENSOR_CHAR_UUID), 
+        BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
+    );
+    
+    pService->start();
+
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID));
+    pAdvertising->setScanResponse(true);
+    pAdvertising->setMinPreferred(0x06);
+    BLEDevice::startAdvertising();
+    Serial.println("BLE Advertising started.");
+}
+
+void loop() {
+    unsigned long timestamp_ms = millis();
+
+    // ------------------- Read IMU -------------------
+    myIMU.readSensor();
+
+    xyzFloat acc, gyr;
+    myIMU.getGValues(&acc);
+    myIMU.getGyrValues(&gyr);
+    float pitch = myIMU.getPitch();
+    float roll  = myIMU.getRoll();
+
+    myData.id = NODE_ID;
+    myData.timestamp = timestamp_ms;
+    myData.acc_x = acc.x;
+    myData.acc_y = acc.y;
+    myData.acc_z = acc.z;
+    myData.pitch = pitch;
+    myData.roll  = roll;
+    myData.gyr_x = gyr.x;
+    myData.gyr_y = gyr.y;
+    myData.gyr_z = gyr.z;
+
+    // ------------------- BLE notify -------------------
+    pSensorCharacteristic->setValue((uint8_t*)&myData, sizeof(myData));
+    if (pServer->getConnectedCount() > 0) {
+        pSensorCharacteristic->notify();
+    }
+
+    Serial.print("Node ");
+    Serial.print(NODE_ID);
+    Serial.print(" Pitch: ");
+    Serial.print(myData.pitch, 2);
+    Serial.print(" Roll: ");
+    Serial.println(myData.roll, 2);
+
+    vTaskDelay(pdMS_TO_TICKS(50)); // ~20 Hz
+}
