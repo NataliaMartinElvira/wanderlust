@@ -1,59 +1,78 @@
+#include <esp_now.h>
 #include <WiFi.h>
-#include <WiFiUdp.h>
 
-//Receiver IP address: 172.20.10.2
+// --------------------------------------------------------------------------
+// EXPANDED DATA STRUCTURE (MUST match the Sender)
+// --------------------------------------------------------------------------
+typedef struct struct_message {
+    int id;
+    unsigned long timestamp;
+    float acc_x;
+    float acc_y;
+    float acc_z;
+    float pitch;
+    float roll;
+    float gyr_x;
+    float gyr_y;
+    float gyr_z;
+} struct_message;
 
+struct_message incomingReadings;
 
-
-// --- Configuration ---
-const char* ssid = "iPhone de Laura";          // Replace with your Wi-Fi name
-const char* password = "ponceorozcolaura";  // Replace with your Wi-Fi password
-unsigned int localUdpPort = 8888;             // Local port to listen on
-
-// --- Global Variables ---
-WiFiUDP Udp;
-char incomingPacket[255]; // Buffer for incoming data
-
-void setup() {
-  Serial.begin(115200);
-  delay(100);
-
-  // Connect to Wi-Fi
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("\nWiFi connected.");
-  Serial.print("Receiver IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Start listening for UDP packets
-  Udp.begin(localUdpPort);
-  Serial.print("Listening on UDP port ");
-  Serial.println(localUdpPort);
+// Callback function executed when data is received (using the updated signature)
+void OnDataRecv(const esp_now_recv_info * info, const uint8_t *incomingData, int len) {
+    // Get the sender's MAC address
+    const uint8_t * mac_addr = info->src_addr;
+    
+    // Copy the received data into the struct
+    memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
+  
+    // Convert MAC address to a printable string
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+             mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  
+    // Print the received data to the Serial Monitor (PC)
+    Serial.print("Data from Node: ");
+    Serial.print(incomingReadings.id);
+    Serial.print(" | Time: ");
+    Serial.print(incomingReadings.timestamp);
+    Serial.print("ms | Acc(X,Y,Z): ");
+    Serial.print(incomingReadings.acc_x, 3);
+    Serial.print(", ");
+    Serial.print(incomingReadings.acc_y, 3);
+    Serial.print(", ");
+    Serial.print(incomingReadings.acc_z, 3);
+    Serial.print(" | Pitch/Roll: ");
+    Serial.print(incomingReadings.pitch, 2);
+    Serial.print(", ");
+    Serial.print(incomingReadings.roll, 2);
+    Serial.print(" | Gyr(X,Y,Z): ");
+    Serial.print(incomingReadings.gyr_x, 3);
+    Serial.print(", ");
+    Serial.print(incomingReadings.gyr_y, 3);
+    Serial.print(", ");
+    Serial.println(incomingReadings.gyr_z, 3);
 }
-
-void loop() {
-  int packetSize = Udp.parsePacket();
-
-  if (packetSize) {
-    // Read the packet into the buffer
-    int len = Udp.read(incomingPacket, 255);
-    if (len > 0) {
-      incomingPacket[len] = 0; // Null-terminate the string
+ 
+void setup() {
+    Serial.begin(115200);
+    
+    // Set device as a Wi-Fi Station
+    WiFi.mode(WIFI_STA);
+    
+    // Initialize ESP-NOW
+    if (esp_now_init() != ESP_OK) {
+        Serial.println("Error initializing ESP-NOW");
+        return;
     }
-
-    // Print the sender's IP and the received data
-    Serial.print("Packet from ");
-    Serial.print(Udp.remoteIP());
-    Serial.print(":");
-    Serial.print(Udp.remotePort());
-    Serial.print(" - Data: ");
-    Serial.println(incomingPacket);
-  }
+    
+    // Register the callback function to receive data
+    esp_now_register_recv_cb(OnDataRecv);
+    
+    Serial.println("Receiver Node Ready. Waiting for data...");
+}
+ 
+void loop() {
+    // Data reception is handled by the OnDataRecv callback
 }
