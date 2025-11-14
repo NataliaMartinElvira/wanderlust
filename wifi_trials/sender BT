@@ -1,0 +1,113 @@
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include "freertos/FreeRTOS.h" 
+#include "freertos/task.h" 
+#include "esp_task_wdt.h"  // ✅ Include WDT functions
+
+// --------------------------------------------------------------------------
+// !!! IMPORTANT: CUSTOMIZE THESE VALUES !!!
+// --------------------------------------------------------------------------
+#define NODE_ID 1 
+const char* deviceName = "ESP32_IMU_NODE_1"; 
+#define SERVICE_UUID "4FAF0C20-1FB5-459E-8AF2-EAC540000001" 
+#define SENSOR_CHAR_UUID "BEB5483E-36E1-4688-B7F5-EA07361B26A8"
+// --------------------------------------------------------------------------
+
+// EXPANDED DATA STRUCTURE 
+typedef struct struct_message {
+    int id;
+    unsigned long timestamp;
+    float acc_x;
+    float acc_y;
+    float acc_z;
+    float pitch;
+    float roll;
+    float gyr_x;
+    float gyr_y;
+    float gyr_z;
+} struct_message;
+
+struct_message myData;
+BLECharacteristic *pSensorCharacteristic;
+BLEServer *pServer = nullptr;  // Global server pointer
+
+// Callback class for handling connections
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      Serial.println("Client connected");
+    };
+
+    void onDisconnect(BLEServer* pServer) {
+      Serial.println("Client disconnected. Restarting advertising...");
+      BLEDevice::startAdvertising(); 
+    }
+};
+
+void setup() {
+    Serial.begin(115200);
+
+    // --------------------- Disable TWDT ---------------------
+    esp_task_wdt_deinit(); // ✅ Disable the Task Watchdog Timer globally
+    Serial.println("TWDT disabled.");
+
+    delay(2000);  // ✅ Startup delay to avoid early WDT triggers
+
+    randomSeed(analogRead(0)); 
+    Serial.println("BLE Setup: Initializing with DUMMY DATA");
+
+    // ---------------------- BLE SERVER SETUP --------------------------
+    BLEDevice::init(deviceName);
+    pServer = BLEDevice::createServer(); 
+    pServer->setCallbacks(new MyServerCallbacks());
+
+    BLEService *pService = pServer->createService(BLEUUID(SERVICE_UUID));
+    
+    pSensorCharacteristic = pService->createCharacteristic(
+                                        BLEUUID(SENSOR_CHAR_UUID), 
+                                        BLECharacteristic::PROPERTY_READ |
+                                        BLECharacteristic::PROPERTY_NOTIFY 
+                                      );
+    
+    pService->start();
+
+    // Start advertising
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID)); 
+    pAdvertising->setScanResponse(true);
+    pAdvertising->setMinPreferred(0x06); 
+    BLEDevice::startAdvertising();
+    Serial.println("BLE Advertising started.");
+}
+
+void loop() {
+    // --- DUMMY DATA GENERATION ---
+    unsigned long timestamp_ms = millis();
+    
+    myData.id = NODE_ID;
+    myData.timestamp = timestamp_ms;
+    myData.acc_x = (float)random(-100, 100) / 10.0;
+    myData.acc_y = (float)random(-100, 100) / 10.0;
+    myData.acc_z = (float)random(90, 110) / 10.0; 
+    myData.pitch = (float)random(-900, 900) / 10.0; 
+    myData.roll = (float)random(-900, 900) / 10.0; 
+    myData.gyr_x = (float)random(-500, 500) / 10.0; 
+    myData.gyr_y = (float)random(-500, 500) / 10.0; 
+    myData.gyr_z = (float)random(-500, 500) / 10.0; 
+    
+    // --- END DUMMY DATA GENERATION ---
+
+    pSensorCharacteristic->setValue((uint8_t*)&myData, sizeof(myData));
+    
+    // Notify only if a client is connected
+    if (pServer->getConnectedCount() > 0) {
+        pSensorCharacteristic->notify();
+    }
+
+    Serial.print("Node ");
+    Serial.print(NODE_ID);
+    Serial.print(" advertising. Pitch: ");
+    Serial.println(myData.pitch);
+    
+    vTaskDelay(pdMS_TO_TICKS(50)); // 20 Hz loop
+}
