@@ -1,0 +1,196 @@
+When you test with your 5 participants, use a very simple paper/excel sheet where, for each rep, you note:
+Rep index (1, 2, 3, …)
+Side (Left / Right)
+Was it good quality? (Yes/No)
+Was it too fast? (Yes/No)
+Did hips move too much? (Yes/No)
+Was trunk too bent / not upright? (Yes/No)
+Did the system’s audio/terminal feedback feel appropriate? (Yes/No, plus notes)
+
+You can later align this roughly with your logs by time (e.g. “rep 1 around 30–35 s”) or by simply counting reps in order.
+
+Protocol you can run with 5 healthy participants
+3.1. Setup (same for all)
+
+For each participant:
+Put sensors on exactly the same locations you’ll use clinically.
+Use the same chair, same sitting instructions:
+Feet flat, knees ~90°, arms crossed over chest (or your standard).
+
+Start your script, let the 3 s calibration run while they sit upright.
+
+Try to be as consistent as possible between participants and trials.
+            
+4. Evaluate trunk rotation detection (no extra hardware needed)
+
+You can’t get exact degrees, but you can test relative correctness and repeatability.
+
+4.1. Monotonicity: “More visible rotation → higher angle”
+For each participant:
+After calibration, ask them to rotate to the right to 3 visually distinct magnitudes:
+“Small turn”
+“Medium turn”
+“Large turn”
+For each magnitude, have them hold position for ~2 seconds.
+
+Watch the terminal output (or log) and note:
+
+The axial angle (axial x.x°) during each hold.
+Do this 2–3 times per side.
+
+What you’re checking:
+For each person and side, do you see:
+small angle < medium angle < large angle (roughly)?
+Across repetitions, does “my small turn” look similar (e.g. 8°, 9°, 8.5°) instead of jumping all over the place?
+
+If that holds for most participants, your axial angle estimate is at least consistent and monotonic, which is what you need for rep detection and feedback thresholds.
+
+4.2. Repeatability over multiple reps
+Ask each participant to do:
+10 “normal” right reps and 10 “normal” left reps to your target.
+
+Look at:
+All peak angles for right reps: 
+Mean and standard deviation.
+All peak angles for left reps.
+
+Rough guide:
+If SD is small (e.g. a few degrees) and target is ~10°, that’s good within-person repeatability.
+If one person’s “normal right reps” vary from +8° to +25°, your system or instructions are unstable → you may need to tweak smoothing or coach them more consistently.
+
+5. Evaluate feedback correctness with “designed mistakes”
+Now you make participants intentionally do things wrong and see if the system reacts.
+You don’t need mocap; you just need to deliberately break the rules and watch whether the code complains.
+
+5.1. Hips moving too much (test HIPS_STILL)
+For each participant:
+Good baseline reps:
+5 reps where you tell them:
+“Twist your trunk but keep your hips and knees pointing forward.”
+Note whether HIPS_STILL does NOT fire (it should stay quiet).
+
+Deliberate bad reps:
+5 reps where you tell them:
+“Now really turn with your hips as well – let the whole pelvis follow.”
+
+You should see:
+pelvis deviation (pelvis +x.x°) increase
+HIPS_STILL events (and audio) on most of these reps.
+From that you derive very simple counts:
+Good reps: How many times did you inappropriately get a HIPS_STILL warning?
+Bad reps: How many times did you fail to get a HIPS_STILL warning?
+
+With 5 participants × 5 reps each, you already have ~25 “good” and 25 “bad” examples. That’s enough to spot if thresholds are wildly off.
+
+If you’re getting tons of false positives → raise MAX_PELVIS_DRIFT_DEG a bit.
+If bad reps are often missed → lower it.
+
+5.2. Trunk too bent (test UPRIGHT)
+Same structure, but now you manipulate trunk bending:
+Good posture reps:
+“Stay tall, rotate without leaning forward or to the side.”
+You want no UPRIGHT warnings here.
+
+Deliberately bent reps:
+“Now rotate and also lean forward and to the side – make it obviously sloppy.”
+
+You should see:
+larger roll/pitch deviations in terminal
+UPRIGHT warnings for most of these.
+
+Again note:
+Good reps with spurious UPRIGHT = false positives.
+Bad reps with missing UPRIGHT = false negatives.
+Adjust MAX_COMP_ANGLE_DEG accordingly.
+
+5.3. Fast / slow reps (test SLOW_DOWN, REP_TOO_FAST, REP_TOO_SLOW)
+For each participant:
+            
+Normal speed reps:
+10 reps at a comfortable pace (how you’d normally coach them).
+Expect mostly:
+REP_REACHED events
+Few or no REP_TOO_FAST / REP_TOO_SLOW.
+            
+Intentionally fast reps:
+5 reps “as fast as you can” (but still safe).
+Expect:
+Many REP_TOO_FAST
+Possibly SLOW_DOWN during the turn.
+            
+Intentionally slow reps:
+5 reps “very slowly, like in slow motion”.
+Expect:
+Many REP_TOO_SLOW
+No SLOW_DOWN.
+If you get a lot of REP_TOO_FAST on normal speed reps → increase REP_MIN_DURATION_S or reduce MAX_YAW_SPEED_DPS.
+If your “as fast as possible” reps don’t trigger anything, thresholds are too generous.
+
+
+
+7. Summarize robustness from this limited setup
+
+With only 5 healthy participants and your 2-IMU setup, you can still produce a small internal report that says:
+Trunk rotation detection
+Angle increases monotonically with visually larger turns for all participants.
+Within-person variation of peak angles for “normal reps” is small (e.g. SD ~2–4°).
+
+Reps
+In a total of X “good reps”, Y were correctly detected, Z were missed.
+In X “subthreshold reps”, how many false reps were counted.
+
+Compensation detection
+% of deliberate hip-movement reps that triggered HIPS_STILL
+% of “good posture” reps that incorrectly triggered HIPS_STILL
+Same for UPRIGHT.
+
+Speed classification
+For “normal speed” vs “very fast” vs “very slow” conditions, how often did it correctly label them.
+That’s not the same as full mocap validation, but it very clearly demonstrates:
+The system behaves consistently.
+Thresholds are tuned to what you and/or a clinician consider “good” vs “bad” movement.
+Feedback is not completely random or mis-timed.
+
+
+
+Offline robustness analysis script
+
+This script reads:
+
+A samples log: trunk_samples_*.csv (from script 1)
+
+An events log: trunk_events_*.csv (from script 1)
+
+A manual labels CSV that you create by hand (Excel → CSV) with columns:
+
+rep_id,side,start_t,end_t,
+good_rep,hips_moved,trunk_bent,too_fast,too_slow
+
+
+Where:
+
+rep_id – integer (1, 2, 3, …)
+
+side – L or R (optional for analysis but nice)
+
+start_t, end_t – in seconds (same time base as t_dev from the logs)
+
+good_rep – 1 if you think “this should count as a rep”, 0 otherwise
+
+hips_moved – 1 if you judge hips moved too much
+
+trunk_bent – 1 if posture was bad (too much bending)
+
+too_fast – 1 if you judge rep as too fast
+
+too_slow – 1 if you judge rep as too slow
+
+The script then:
+
+Computes detection metrics for rep reaching
+
+Compares hips_moved vs HIPS_STILL events
+
+Compares trunk_bent vs UPRIGHT
+
+Compares too_fast / too_slow vs REP_TOO_FAST / REP_TOO_SLOW
