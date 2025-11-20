@@ -136,11 +136,6 @@ class ObstacleStepAnalyzer:
 
         # --- LOCK 2: HEIGHT (Improved Hybrid Logic) ---
         
-        
-
-[Image of gait cycle hip and knee flexion angles]
-
-
         # A) Via Knee Flexion
         # Pitch required: 1 degree per cm (softer requirement)
         req_pitch = 5.0 + (self.target_height * 1.0)
@@ -156,7 +151,6 @@ class ObstacleStepAnalyzer:
         success_height = passed_flexion or passed_lift
         
         # --- LOCK 3: AMPLITUDE (Step Length) ---
-        
         req_rotation = 15.0 + (self.target_depth * 0.6)
         success_amplitude = (total_rotation >= req_rotation)
 
