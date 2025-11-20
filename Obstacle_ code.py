@@ -1,4 +1,4 @@
-import socket
+import serial
 import time
 import datetime as dt
 from pathlib import Path
@@ -6,10 +6,10 @@ import pandas as pd
 import numpy as np
 
 # ==========================================
-# 1. ADVANCED CONFIGURATION
+# 1. CONFIGURATION
 # ==========================================
-HOST = "192.168.4.1"
-PORT = 3333
+SERIAL_PORT = 'COM6'       # <--- CHECK YOUR PORT
+BAUD_RATE = 115200
 
 # --- REAL DIMENSIONS (CM) ---
 OBSTACLE_HEIGHT_CM = 15.0   
@@ -17,29 +17,31 @@ OBSTACLE_DEPTH_CM  = 20.0
 SAFETY_MARGIN_CM   = 5.0    
 
 # --- ANTI-CHEAT FILTERS ---
-# A real step to overcome an object requires control.
-# If it lasts less than this, it is a kick or a spasm.
 MIN_STEP_DURATION_S = 0.6   # Minimum 0.6 seconds in the air
 MAX_STEP_DURATION_S = 3.5   # Maximum (if longer, it's considered noise)
 
 # Detection Sensitivity (Start/Stop)
-GYRO_START_THR_DPS = 15.0  # Increased slightly to ignore tremors
+GYRO_START_THR_DPS = 15.0  
 GYRO_STOP_THR_DPS  = 5.0   
 
 # Excel Sheet Names
 SHEET_RAW = "Raw_Data"
 SHEET_STEPS = "Step_Analysis"
 
+# HEADERS (Must match the V1_ACCEL packet structure)
 HEADERS = [
     "time_ms", "acc_x_g", "acc_y_g", "acc_z_g",
     "pitch_deg", "roll_deg", "gyr_x_dps", "gyr_y_dps", "gyr_z_dps"
 ]
 
+# V1 sends 9 items (Time + 8 data points)
+LEN_V1 = 9 
+
 def now_ts():
     return dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # =========================
-# 2. LOGIC
+# 2. LOGIC CLASSES (KEPT EXACTLY AS REQUESTED)
 # =========================
 
 class SensorCalibrator:
@@ -195,18 +197,15 @@ class ObstacleStepAnalyzer:
 # =========================
 # 3. CONNECTION & MAIN
 # =========================
-def connect():
-    while True:
-        try:
-            print(f"Connecting to {HOST}:{PORT} ...")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(5)
-            s.connect((HOST, PORT))
-            s.settimeout(None)
-            print("Connected.")
-            return s
-        except Exception:
-            time.sleep(2)
+def setup_serial():
+    print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE} baud...")
+    try:
+        s = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        print("Connected.")
+        return s
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 def save_excel_safe(path, raw_data, step_data):
     if not raw_data: return
@@ -217,20 +216,23 @@ def save_excel_safe(path, raw_data, step_data):
                 pd.DataFrame(step_data).to_excel(w, index=False, sheet_name=SHEET_STEPS)
             else:
                 pd.DataFrame().to_excel(w, sheet_name=SHEET_STEPS)
-    except: pass
+        print("Excel saved.")
+    except Exception as e: 
+        print(f"Save failed: {e}")
 
 def main():
     timestamp = now_ts()
-    out_path = Path(__file__).parent / f"session_anti_cheat_{timestamp}.xlsx"
+    out_path = Path(__file__).parent / f"session_obstacle_V1_{timestamp}.xlsx"
+    print(f"Saving to: {out_path}")
     
     calibrator = SensorCalibrator()
     analyzer = ObstacleStepAnalyzer(calibrator)
     
     raw_rows = []
     step_rows = []
-    buffer_str = ""
     
-    s = connect()
+    s = setup_serial()
+    if not s: return
     
     print("\n>>> CALIBRATING (3s)... STAY STILL <<<")
     calibrating = True
@@ -238,22 +240,34 @@ def main():
 
     try:
         while True:
-            try:
-                data = s.recv(2048)
-                if not data: break
-                buffer_str += data.decode("utf-8", errors="ignore")
-            except: break
-
-            while "\n" in buffer_str:
-                line, buffer_str = buffer_str.split("\n", 1)
-                parts = [p.strip() for p in line.split(",")]
-
-                if len(parts) == len(HEADERS) and parts[0] != "time_ms":
+            if s.in_waiting > 0:
+                line = s.readline().decode("utf-8", errors="ignore").strip()
+                
+                # ==========================================
+                # PARSING LOGIC (V1_ACCEL FILTER)
+                # ==========================================
+                parts = []
+                
+                if line.startswith("V1_ACCEL:"):
+                    clean_line = line.replace("V1_ACCEL:", "")
+                    temp_parts = clean_line.split(',')
+                    
+                    # Expect 9 items (Time + 8 data points)
+                    if len(temp_parts) == LEN_V1:
+                        parts = temp_parts
+                
+                # Only proceed if we have a valid V1 packet
+                if len(parts) == LEN_V1:
                     try:
+                        # Convert strings to floats
                         vals = [float(x) for x in parts]
+                        # Map to dictionary for the Analyzer
                         row = dict(zip(HEADERS, vals))
+                        
+                        # Store Raw Data
                         raw_rows.append(row)
                         
+                        # --- LOGIC: CALIBRATION PHASE ---
                         if calibrating:
                             calibrator.add_sample(row)
                             if time.time() - calib_start > 3.0:
@@ -262,9 +276,11 @@ def main():
                                     print("\n>>> GO! OVERCOME THE OBSTACLE WITH CONTROL <<<\n")
                                 else:
                                     calib_start = time.time()
-                            continue
+                            continue # Skip analysis while calibrating
 
+                        # --- LOGIC: ANALYSIS PHASE ---
                         result = analyzer.process_sample(row)
+                        
                         if result:
                             # If step was rejected for being too fast
                             if result.get("fail_reason") == "TOO_FAST":
@@ -278,15 +294,19 @@ def main():
                                     "a_ok": not result["insufficient_amplitude"]
                                 })
                                 step_rows.append(log)
+                                
+                                # Save periodically on successful steps
+                                save_excel_safe(out_path, raw_rows, step_rows)
 
                     except ValueError:
                         continue
+
     except KeyboardInterrupt:
         print("\nFinished.")
     finally:
-        try: s.close()
-        except: pass
+        if 's' in locals() and s.is_open: s.close()
         save_excel_safe(out_path, raw_rows, step_rows)
+        print(f"Final File: {out_path}")
 
 if __name__ == "__main__":
     main()
