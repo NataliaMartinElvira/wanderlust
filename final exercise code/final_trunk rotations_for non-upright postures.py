@@ -1,60 +1,26 @@
 # seated_trunk_rotation_axial_realtime_turnstate_unity_tcp_fixed.py
-#
-# Seated trunk rotation detection using two IMUs:
-# - 3 s time-based calibration (assumed still)
-# - Trunk rotation = rotation of thorax vs pelvis around a calibrated pelvis "spine axis" (IMU +X),
-#   relative to that calibration posture (which may be flexed / non-ideal)
-# - Robust to small mounting differences (X≈up, Y≈left, Z≈back)
-# - Drift-controlled via differential gyro fusion projected onto joint axis + stillness freezing
-# - Side-specific targets for right and left
-# - REAL-TIME, per-turn feedback:
-#   * "Rotate further to the right/left" (only while actively moving deeper into that side)
-#   * "Keep hips still while turning right/left"
-#   * "Keep your trunk more upright while turning right/left"
-#   * "Slow down while turning right/left"
-#   Feedback is tied to an active "turn" state and updated every ~0.4 s at most.
-#
-# UNITY TCP UI INTEGRATION:
-# - Unity runs a TCP server, e.g. at 127.0.0.1:5001.
-# - This script connects as a client and sends ONE-LINE EVENTS (no side info):
-#       UI_CONNECTED
-#       IMU_CONNECTED
-#       CALIB_DONE
-#       REP_REACHED
-#       REP_TOO_FAST
-#       REP_TOO_SLOW
-#       SLOW_DOWN
-#       UPRIGHT
-#       HIPS_STILL
-#       ROTATE_FURTHER
-#
-# DRIFT / FEEDBACK IMPROVEMENTS:
-# - Each warning type (speed / bending / pelvis / depth) is given at most once per turn.
-# - Hysteresis on bending and pelvis drift to avoid chatter.
-# - "moving" depends only on gyro, so holding a rotated posture is considered rest.
-# - Relative-gyro integrator is prevented from drifting far from geometric angle.
-# - Fused angles are wrapped so they stay in [-180, 180]°.
-#
-# REP-SPEED CLASSIFICATION:
-# - When a rep (left or right) hits its target, the duration from turn start is measured.
-# - If duration < REP_MIN_DURATION_S  -> "rep too fast"  (REP_TOO_FAST)
-# - If duration > REP_MAX_DURATION_S  -> "rep too slow"  (REP_TOO_SLOW)
-# - Else treated as normal-speed rep (only REP_REACHED event).
+# ADAPTED FOR SERIAL V2_ACCEL (2 IMUS IN 1 PACKET)
+import msvcrt
 
-import socket
+import serial # <--- Switched from socket
 import time
 import sys
 import numpy as np
 from ahrs.filters import Madgwick
 from scipy.signal import savgol_filter
 from datetime import datetime
+import socket # Keep socket for Unity TCP
 
-# IMU streaming server (your WiFi device)
-HOST = "192.168.4.1"
-PORT = 3333
+# =========================
+# CONFIGURATION
+# =========================
+SERIAL_PORT = 'COM6'      # <--- CHECK YOUR PORT
+BAUD_RATE = 115200
 
-HEADERS = ["imu_id","time_ms","acc_x_g","acc_y_g","acc_z_g",
-           "pitch_deg","roll_deg","gyr_x_dps","gyr_y_dps","gyr_z_dps"]
+# Packet Config for V2_ACCEL
+# Format: Time, A1x,A1y,A1z, P1,R1, G1x,G1y,G1z, A2x,A2y,A2z, P2,R2, G2x,G2y,G2z
+# Total items = 1 + 8 + 8 = 17
+LEN_V2 = 17 
 
 # Unity UI TCP server (Unity listens here)
 UI_HOST = "127.0.0.1"
@@ -66,8 +32,8 @@ SAMPLE_HZ               = 20.0
 CALIBRATION_SECONDS     = 3.0   # assume patient sits still (their personal upright)
 
 # Coaching targets (side-specific)
-AXIAL_TARGET_RIGHT_DEG  = 10.0   # target axial rotation for RIGHT (positive)
-AXIAL_TARGET_LEFT_DEG   = 10.0   # target axial rotation for LEFT  (positive magnitude)
+AXIAL_TARGET_RIGHT_DEG  = 8.0   # target axial rotation for RIGHT (positive)
+AXIAL_TARGET_LEFT_DEG   = 8.0   # target axial rotation for LEFT  (positive magnitude). z
 YAW_HYST_DEG            = 5.0    # hysteresis around each target
 
 MAX_YAW_SPEED_DPS       = 120.0  # instantaneous max speed for "Slow down"
@@ -82,10 +48,6 @@ SMOOTH_POLY             = 2
 # Rep-speed classification (per completed rep)
 REP_MIN_DURATION_S      = 0.5    # reps shorter than this are "too fast"
 REP_MAX_DURATION_S      = 3.0    # reps longer than this are "too slow"
-
-# Stream channel IDs
-UPPER_ID  = "IMU_CH3"
-PELVIS_ID = "IMU_CH0"
 
 # Stillness gating (freeze both only when BOTH are truly still)
 STILL_GYR_DPS           = 2.5
@@ -174,16 +136,6 @@ def angle_wrap_deg(a):
     return ((a + 180.0) % 360.0) - 180.0
 
 def axial_angle_about_axis(q_rel, axis_world):
-    """
-    Approximate trunk rotation angle (deg) around given axis_world using the
-    relative quaternion q_rel (upper vs pelvis).
-
-    q_rel = [w, x, y, z] with |q_rel|=1.
-    For a pure rotation about axis_world, v = axis_world * sin(theta/2).
-    We project v onto axis_world to get the component of rotation around that axis.
-
-    Returns signed angle in degrees, wrapped to [-180, 180].
-    """
     axis = np.array(axis_world, dtype=float)
     n = np.linalg.norm(axis)
     if n < 1e-6:
@@ -195,35 +147,6 @@ def axial_angle_about_axis(q_rel, axis_world):
     v_par = np.clip(v_par, -1.0, 1.0)
     theta = 2.0 * np.degrees(np.arcsin(v_par))  # signed
     return angle_wrap_deg(theta)
-
-def connect_imu():
-    """Connect to the IMU streaming server (over WiFi)."""
-    while True:
-        try:
-            print(f"Connecting to {HOST}:{PORT} …")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(10)
-            s.connect((HOST, PORT))
-            s.settimeout(None)
-            print("Connected.\n")
-            return s
-        except Exception as e:
-            print(f"Connect failed: {e}. Retrying in 2s…")
-            time.sleep(2)
-
-def parse_line(line):
-    parts = [p.strip() for p in line.split(",")]
-    if len(parts) != len(HEADERS):
-        return None
-    try:
-        imu_id = parts[0]
-        t_ms   = int(float(parts[1]))
-        ax,ay,az = map(float, parts[2:5])
-        gx,gy,gz = map(float, parts[7:10])
-        gx,gy,gz = np.radians([gx,gy,gz])  # rad/s
-        return imu_id, t_ms, np.array([ax,ay,az]), np.array([gx,gy,gz])
-    except Exception:
-        return None
 
 def now_hhmmss():
     return datetime.now().strftime("%H:%M:%S")
@@ -249,20 +172,6 @@ def connect_ui_socket():
         ui_socket = None
 
 def send_ui_event(event_name: str):
-    """
-    Send a single event line to Unity over TCP.
-    Example events:
-        "UI_CONNECTED"
-        "IMU_CONNECTED"
-        "CALIB_DONE"
-        "REP_REACHED"
-        "REP_TOO_FAST"
-        "REP_TOO_SLOW"
-        "SLOW_DOWN"
-        "UPRIGHT"
-        "HIPS_STILL"
-        "ROTATE_FURTHER"
-    """
     global ui_socket
     if ui_socket is None:
         return
@@ -280,7 +189,7 @@ def send_ui_event(event_name: str):
 # ---------- Main ----------
 
 def main():
-    print(color("Seated trunk rotation – axial about calibrated pelvis spine axis (real-time per-turn feedback)", "bold"))
+    print(color("Seated trunk rotation – V2 DUAL IMU (Serial) + Unity", "bold"))
     print("Sit still for ~3 s at start (posture + gyro-bias calibration).")
     print(
         f"Targets: Right axial ≥ {AXIAL_TARGET_RIGHT_DEG:.0f}°, "
@@ -291,6 +200,16 @@ def main():
 
     # Try to connect to Unity once at startup
     connect_ui_socket()
+
+    # Connect to Serial Port
+    print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE}...")
+    try:
+        s_serial = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        print("Connected to Serial.\n")
+        send_ui_event("IMU_CONNECTED")
+    except Exception as e:
+        print(color(f"Serial Error: {e}", "red"))
+        return
 
     f_upper = Madgwick(beta=0.08, frequency=SAMPLE_HZ)
     f_pel   = Madgwick(beta=0.08, frequency=SAMPLE_HZ)
@@ -341,12 +260,6 @@ def main():
     yaw_buf = []
     wall_prev = None
 
-    # Paired frames
-    last_u_wall = None
-    last_p_wall = None
-    new_u = False
-    new_p = False
-
     # Latest raw acc/gyro for each
     acc_u = np.array([0.,0.,1.])
     gyr_u = np.zeros(3)
@@ -387,463 +300,366 @@ def main():
         ]
         print((f"{bar_txt} | " + " | ".join(right)).ljust(110), end="\r", flush=True)
 
-    # ---- IMU Socket ----
-    s = connect_imu()
-    # Tell Unity that IMU/WiFi connection is established
-    send_ui_event("IMU_CONNECTED")
-
-    buffer = ""
-    header_seen = False
-
     try:
         while True:
-            data = s.recv(1024)
-            if not data:
-                raise ConnectionError("Remote closed")
-            buffer += data.decode("utf-8", errors="ignore")
-
-            while "\n" in buffer:
-                line, buffer = buffer.split("\n", 1)
-                line = line.strip()
+            if s_serial.in_waiting > 0:
+                line = s_serial.readline().decode("utf-8", errors="ignore").strip()
+                
                 if not line:
                     continue
 
-                parts = [p.strip() for p in line.split(",")]
-                if not header_seen:
-                    if parts == HEADERS:
-                        header_seen = True
-                        continue
-                    header_seen = True
-
-                parsed = parse_line(line)
-                if parsed is None:
-                    print_event(f"UNPARSED: {line}", tone="yellow")
-                    continue
-
-                imu_id, t_ms, acc, gyr = parsed
-                if start_ms is None:
-                    start_ms = t_ms
-                t_dev = (t_ms - start_ms)/1000.0
-                if t0_dev is None:
-                    t0_dev = t_dev
-
-                # ---- Update filters ----
-                if imu_id == UPPER_ID:
-                    acc_u = acc.copy()
-                    gyr_u = gyr.copy()
-                    g_for_filter = gyr if yaw_rel_bias is None else (gyr - gyr_u_bias)
-                    q_u = f_upper.updateIMU(gyr=g_for_filter, acc=acc, q=q_u)
-                    last_u_wall = time.perf_counter()
-                    new_u = True
-                    if (t_dev - t0_dev) <= CALIBRATION_SECONDS:
-                        gyr_u_cal.append(gyr)
-
-                elif imu_id == PELVIS_ID:
-                    acc_p = acc.copy()
-                    gyr_p = gyr.copy()
-                    g_for_filter = gyr if yaw_rel_bias is None else (gyr - gyr_p_bias)
-                    q_p = f_pel.updateIMU(gyr=g_for_filter, acc=acc, q=q_p)
-                    last_p_wall = time.perf_counter()
-                    new_p = True
-                    if (t_dev - t0_dev) <= CALIBRATION_SECONDS:
-                        gyr_p_cal.append(gyr)
-
-                else:
-                    continue
-
-                # Process only when both are fresh and recent (paired frames)
-                if not (new_u and new_p):
-                    continue
-                noww = time.perf_counter()
-                if (noww - last_u_wall) > PAIR_MAX_AGE_S or (noww - last_p_wall) > PAIR_MAX_AGE_S:
-                    continue
-                new_u = new_p = False
-
-                # Rotation matrices (for gyro transforms)
-                Ru = quat_to_R(q_u)
-                Rp = quat_to_R(q_p)
-
-                # ---- Stillness check and freezing (after calibration) ----
-                still_u = is_still(gyr_u - (gyr_u_bias if yaw_rel_bias is not None else 0.0), acc_u)
-                still_p = is_still(gyr_p - (gyr_p_bias if yaw_rel_bias is not None else 0.0), acc_p)
-
-                if yaw_rel_bias is not None and still_u and still_p:
-                    if not frozen:
-                        q_u_freeze = q_u.copy()
-                        q_p_freeze = q_p.copy()
-                        frozen = True
-                    q_u = q_u_freeze.copy()
-                    q_p = q_p_freeze.copy()
-                    Ru = quat_to_R(q_u)
-                    Rp = quat_to_R(q_p)
-                else:
-                    frozen = False
-
-                # ---- Relative orientation (thorax vs pelvis) ----
-                q_rel = quat_mul(q_u, quat_conj(q_p))
-                r_rel, p_rel, _ = euler_zyx(q_rel)  # relative roll/pitch for bending check
-
-                # Pelvis yaw (for drift/hip movement check)
-                _, _, yaw_p = euler_zyx(q_p)
-
-                # During calibration, use instantaneous pelvis +X axis
-                spine_axis_world_dynamic = Rp @ spine_axis_body
-
-                # Geometric axial angle about spine axis (for calibration collection)
-                axial_geom_calib = axial_angle_about_axis(q_rel, spine_axis_world_dynamic)
-
-                # ---- Calibration window ----
-                if (t_dev - t0_dev) <= CALIBRATION_SECONDS:
-                    # Collect axial angle and pelvis yaw baselines
-                    coll_rel.append(axial_geom_calib)
-                    coll_pel.append(yaw_p)
-
-                    # Collect relative posture baselines (thorax vs pelvis)
-                    coll_p_rel.append(p_rel)
-                    coll_r_rel.append(r_rel)
-
-                    pct = min(1.0, (t_dev - t0_dev)/CALIBRATION_SECONDS)
-                    render(0.0, 0.0, 0.0)
-                    print(f" Calibrating… {pct*100:0.0f}%".ljust(20), end="\r", flush=True)
-                    wall_prev = time.perf_counter()
-                    continue
-
-                # Finalize calibration once
-                if yaw_rel_bias is None:
-                    yaw_rel_bias = float(np.median(coll_rel)) if coll_rel else 0.0
-                    pel_yaw_bias = float(np.median(coll_pel)) if coll_pel else 0.0
-
-                    if gyr_u_cal:
-                        gyr_u_bias = np.median(np.vstack(gyr_u_cal), axis=0)
-                    if gyr_p_cal:
-                        gyr_p_bias = np.median(np.vstack(gyr_p_cal), axis=0)
-
-                    # Relative posture baselines (so rotations are w.r.t. this posture)
-                    if coll_p_rel:
-                        p_rel_bias = float(np.median(coll_p_rel))
-                    if coll_r_rel:
-                        r_rel_bias = float(np.median(coll_r_rel))
-
-                    # Calibrated spine axis in world coordinates (personal "upright")
-                    spine_axis_world_calib = Rp @ spine_axis_body
-                    n_axis = np.linalg.norm(spine_axis_world_calib)
-                    if n_axis > 1e-6:
-                        spine_axis_world_calib /= n_axis
-                    else:
-                        spine_axis_world_calib = np.array([1.0, 0.0, 0.0])
-
-                    print_event(
-                        f"Calibration done. "
-                        f"Axial bias {yaw_rel_bias:+.1f}°, pelvis yaw bias {pel_yaw_bias:+.1f}°. "
-                        f"Gyro biases z (upper, pelvis) = "
-                        f"{np.degrees(gyr_u_bias[2]):+.3f}°/s, {np.degrees(gyr_p_bias[2]):+.3f}°/s. "
-                        f"Rel posture bias (roll, pitch) = {r_rel_bias:+.1f}°, {p_rel_bias:+.1f}°",
-                        tone="green"
-                    )
-
-                    # Inform Unity that calibration is done
-                    send_ui_event("CALIB_DONE")
-
-                    rel_axial_int = 0.0
-                    last_yaw = None
-                    wall_prev = time.perf_counter()
-                    continue  # next loop iteration with calibrated biases
-
-                # ---- Normal measurement phase ----
-
-                # Use calibrated spine axis if available; fall back to current if not
-                axis_used = spine_axis_world_calib if spine_axis_world_calib is not None else (Rp @ spine_axis_body)
-
-                # Geometric axial angle about calibrated spine axis
-                axial_geom = axial_angle_about_axis(q_rel, axis_used)
-
-                # Bias-corrected axial angle and pelvis deviation
-                # NOTE: positive = right, negative = left
-                axial_bc_raw = angle_wrap_deg(axial_geom - yaw_rel_bias)
-                axial_bc     = axial_bc_raw
-
-                y_pel_dev = angle_wrap_deg(yaw_p - pel_yaw_bias)       # pelvis yaw vs calibration
-
-                # Wall-clock dt
-                t_now = time.perf_counter()
-                dt = 0.0 if wall_prev is None else (t_now - wall_prev)
-                wall_prev = t_now
-
-                # Differential-gyro axial rate: project relative angular velocity onto calibrated spine axis
-                gw_u = Ru @ (gyr_u - gyr_u_bias)   # rad/s, world frame
-                gw_p = Rp @ (gyr_p - gyr_p_bias)
-                rel_omega_world = gw_u - gw_p
-
-                axis = axis_used
-                norm_axis = np.linalg.norm(axis)
-                if norm_axis < 1e-6:
-                    axis_unit = np.array([1.0, 0.0, 0.0])
-                else:
-                    axis_unit = axis / norm_axis
-
-                axial_omega_rad = np.dot(rel_omega_world, axis_unit)
-                axial_omega_dps = np.degrees(axial_omega_rad)
-
-                # Movement decision: ONLY gyro-based, not angle-based
-                moving = (np.degrees(np.linalg.norm(gw_u)) >= STILL_GYR_DPS) \
-                      or (np.degrees(np.linalg.norm(gw_p)) >= STILL_GYR_DPS)
-
-                # Integrate axial gyro with leak + glue to geometric axial angle at rest
-                if dt > (REL_MIN_DT_FRAC / SAMPLE_HZ):
-                    if moving:
-                        # During movement, follow gyro changes (short-term)
-                        rel_axial_int += axial_omega_dps * dt
-                    else:
-                        # At rest, gently decay & re-align to geometry to limit drift
-                        rel_axial_int *= np.exp(-dt / REL_LEAK_TAU_STILL_S)
-                        alpha = 0.35   # geometry weight at rest
-                        rel_axial_int = (1.0 - alpha)*rel_axial_int + alpha*axial_bc
-
-                # ---- Prevent runaway integrator drift ----
-                diff_int_geom = angle_wrap_deg(rel_axial_int - axial_bc)
-                if abs(diff_int_geom) > REL_MAX_INT_OFFSET_DEG:
-                    rel_axial_int = axial_bc + np.clip(
-                        diff_int_geom,
-                        -REL_MAX_INT_OFFSET_DEG,
-                        REL_MAX_INT_OFFSET_DEG,
-                    )
-                rel_axial_int = angle_wrap_deg(rel_axial_int)
-
-                # Complementary fusion: geometry-dominant, gyro-assisted when moving
-                if moving:
-                    w_gyro = 0.3
-                else:
-                    w_gyro = 0.0
-                axial_fused = (1.0 - w_gyro)*axial_bc + w_gyro*rel_axial_int
-
-                # Wrap fused angle as well
-                axial_fused = angle_wrap_deg(axial_fused)
-
-                # Smoothing & axial velocity (for display and rep detection)
-                yaw_buf.append(axial_fused)
-                if len(yaw_buf) >= max(3, SMOOTH_WINDOW):
-                    if len(yaw_buf) >= SMOOTH_WINDOW and SMOOTH_WINDOW % 2 == 1:
-                        y_smooth = savgol_filter(
-                            np.array(yaw_buf[-SMOOTH_WINDOW:]),
-                            SMOOTH_WINDOW,
-                            SMOOTH_POLY
-                        )[-1]
-                    else:
-                        y_smooth = yaw_buf[-1]
-                else:
-                    y_smooth = axial_fused
-
-                yaw_vel_dps = 0.0
-                if dt > (REL_MIN_DT_FRAC / SAMPLE_HZ) and last_yaw is not None:
-                    yaw_vel_dps = (y_smooth - last_yaw) / dt
-                last_yaw = y_smooth
-
-                # ---- Quality signals ----
-                p_rel_dev = p_rel - p_rel_bias
-                r_rel_dev = r_rel - r_rel_bias
-
-                raw_bending_now = (
-                    abs(p_rel_dev) > MAX_COMP_ANGLE_DEG or
-                    abs(r_rel_dev) > MAX_COMP_ANGLE_DEG
-                )
-                raw_pelvis_violation_now = abs(y_pel_dev) > MAX_PELVIS_DRIFT_DEG
-                too_fast_now = abs(yaw_vel_dps) > MAX_YAW_SPEED_DPS
-
-                # Simple hysteresis of ~3 degrees to avoid chatter
-                BEND_OUT_DEG   = max(0.0, MAX_COMP_ANGLE_DEG - 3.0)
-                PELVIS_OUT_DEG = max(0.0, MAX_PELVIS_DRIFT_DEG - 3.0)
-
-                # Bending hysteresis
-                if bending_state:
-                    if (abs(p_rel_dev) <= BEND_OUT_DEG and
-                        abs(r_rel_dev) <= BEND_OUT_DEG):
-                        bending_state = False
-                else:
-                    if raw_bending_now:
-                        bending_state = True
-
-                # Pelvis drift hysteresis
-                if pelvis_state:
-                    if abs(y_pel_dev) <= PELVIS_OUT_DEG:
-                        pelvis_state = False
-                else:
-                    if raw_pelvis_violation_now:
-                        pelvis_state = True
-
-                bending_now = bending_state
-                pelvis_violation_now = pelvis_state
-
-                # ---- REAL-TIME per-turn feedback state machine ----
-                abs_axial = abs(y_smooth)  # use smoothed angle for direction & thresholds
-
-                if abs_axial > DIR_MIN_DEG and moving:
-                    # Direction from smoothed angle (more stable)
-                    current_dir = 1 if y_smooth >= 0 else -1
-
-                    # Start new turn or switch direction
-                    if turn_state_dir == 0 or current_dir != turn_state_dir:
-                        turn_state_dir = current_dir
-                        turn_state_start_t = t_dev
-                        turn_state_last_fb_t = -1e9  # allow immediate feedback
-
-                        # Reset per-turn warning flags
-                        warned_speed_this_turn  = False
-                        warned_bend_this_turn   = False
-                        warned_pelvis_this_turn = False
-                        warned_depth_this_turn  = False
-
-                    # Decide if it's time to say something
-                    time_in_turn = t_dev - turn_state_start_t
-                    time_since_fb = t_dev - turn_state_last_fb_t
-                    if time_since_fb >= TURN_FEEDBACK_INTERVAL_S:
-                        dir_sign = turn_state_dir
-                        dir_str = "right" if dir_sign > 0 else "left"
-                        target_for_dir = AXIAL_TARGET_RIGHT_DEG if dir_sign > 0 else AXIAL_TARGET_LEFT_DEG
-
-                        # Is the motion currently going deeper into this side?
-                        same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
-
-                        msgs = []
-
-                        # Speed warning
-                        if too_fast_now and not warned_speed_this_turn:
-                            msgs.append(f"Slow down while turning {dir_str}.")
-                            warned_speed_this_turn = True
-                            send_ui_event("SLOW_DOWN")
-
-                        # Bending warning (extra forward/side lean beyond calibration)
-                        if bending_now and not warned_bend_this_turn:
-                            msgs.append(f"Keep your trunk more upright while turning {dir_str}.")
-                            warned_bend_this_turn = True
-                            send_ui_event("UPRIGHT")
-
-                        # Pelvis / hip movement warning
-                        if pelvis_violation_now and not warned_pelvis_this_turn:
-                            msgs.append(f"Keep your hips still while turning {dir_str}.")
-                            warned_pelvis_this_turn = True
-                            send_ui_event("HIPS_STILL")
-
-                        # Depth / "rotate further" feedback
-                        if (
-                            time_in_turn > DEPTH_WARN_MIN_TIME_S and
-                            same_direction_motion and
-                            abs_axial < DEPTH_WARN_FRACTION * target_for_dir and
-                            not warned_depth_this_turn
-                        ):
-                            msgs.append(f"Rotate further to the {dir_str}.")
-                            warned_depth_this_turn = True
-                            send_ui_event("ROTATE_FURTHER")
-
-                        if msgs:
-                            beep()
-                            print_event(" ".join(msgs), tone="yellow")
-                            turn_state_last_fb_t = t_dev
-
-                else:
-                    # No longer clearly turning -> reset turn state
-                    if abs_axial < TURN_END_DEG or not moving:
-                        turn_state_dir = 0
-                        turn_state_start_t = t_dev
-                        turn_state_last_fb_t = -1e9
-                        warned_speed_this_turn  = False
-                        warned_bend_this_turn   = False
-                        warned_pelvis_this_turn = False
-                        warned_depth_this_turn  = False
-
-                # ---- Rep detection (side-specific thresholds with hysteresis) ----
-                up_th    = AXIAL_TARGET_RIGHT_DEG        # right target
-                down_th  = -AXIAL_TARGET_LEFT_DEG        # left target (negative)
-                exit_pos = up_th   - YAW_HYST_DEG        # right hysteresis exit
-                exit_neg = down_th + YAW_HYST_DEG        # left hysteresis exit (less negative)
-
-                # Right side (positive axial)
-                if (not zone_pos) and (y_smooth >= up_th) and ((t_dev - last_peak_t) >= MIN_REP_GAP_S):
-                    zone_pos = True
-                    zone_neg = False
-                    peaks_R.append((t_dev, y_smooth))
-                    last_peak_t = t_dev
-                    beep()
-                    print_event(f"✓ Target reached (Right) at {y_smooth:+.1f}°", tone="green")
-                    send_ui_event("REP_REACHED")
-
-                    # ---- Rep-speed classification for this rep ----
-                    rep_duration = t_dev - turn_state_start_t
-                    if rep_duration < REP_MIN_DURATION_S:
-                        print_event(
-                            f"Rep too fast (Right): {rep_duration:.2f}s < {REP_MIN_DURATION_S:.2f}s",
-                            tone="yellow"
-                        )
-                        send_ui_event("REP_TOO_FAST")
-                    elif rep_duration > REP_MAX_DURATION_S:
-                        print_event(
-                            f"Rep too slow (Right): {rep_duration:.2f}s > {REP_MAX_DURATION_S:.2f}s",
-                            tone="yellow"
-                        )
-                        send_ui_event("REP_TOO_SLOW")
-
-                # Left side (negative axial)
-                if (not zone_neg) and (y_smooth <= down_th) and ((t_dev - last_peak_t) >= MIN_REP_GAP_S):
-                    zone_neg = True
-                    zone_pos = False
-                    peaks_L.append((t_dev, y_smooth))
-                    last_peak_t = t_dev
-                    beep()
-                    print_event(f"✓ Target reached (Left) at {y_smooth:+.1f}°", tone="green")
-                    send_ui_event("REP_REACHED")
-
-                    # ---- Rep-speed classification for this rep ----
-                    rep_duration = t_dev - turn_state_start_t
-                    if rep_duration < REP_MIN_DURATION_S:
-                        print_event(
-                            f"Rep too fast (Left): {rep_duration:.2f}s < {REP_MIN_DURATION_S:.2f}s",
-                            tone="yellow"
-                        )
-                        send_ui_event("REP_TOO_FAST")
-                    elif rep_duration > REP_MAX_DURATION_S:
-                        print_event(
-                            f"Rep too slow (Left): {rep_duration:.2f}s > {REP_MAX_DURATION_S:.2f}s",
-                            tone="yellow"
-                        )
-                        send_ui_event("REP_TOO_SLOW")
-
-                # Hysteresis exit
-                if zone_pos and y_smooth < exit_pos:
-                    zone_pos = False
-                if zone_neg and y_smooth > exit_neg:
-                    zone_neg = False
-
-                # Live status line (compact)
-                render(y_smooth, yaw_vel_dps, y_pel_dev)
+                # ==========================================
+                # PARSING V2_ACCEL (Single line, 2 IMUs)
+                # ==========================================
+                # Format: V2_ACCEL:Time, [IMU1: Ax,Ay,Az,P,R,Gx,Gy,Gz], [IMU2: Ax,Ay,Az,P,R,Gx,Gy,Gz]
+                # Indices: Time=0
+                # IMU1 (Pelvis): Acc=1-3, Gyr=6-8
+                # IMU2 (Upper):  Acc=9-11, Gyr=14-16
+                
+                if line.startswith("V2_ACCEL:"):
+                    clean_line = line.replace("V2_ACCEL:", "")
+                    parts = clean_line.split(',')
+                    
+                    if len(parts) == LEN_V2:
+                        try:
+                            t_ms = int(float(parts[0]))
+                            
+                            # --- PARSE PELVIS (IMU 1) ---
+                            # Indices: Acc(1,2,3), Gyr(6,7,8)
+                            ax_p, ay_p, az_p = float(parts[1]), float(parts[2]), float(parts[3])
+                            gx_p, gy_p, gz_p = float(parts[6]), float(parts[7]), float(parts[8])
+                            
+                            acc_p = np.array([ax_p, ay_p, az_p])
+                            # Convert to radians/sec for Madgwick
+                            gyr_p = np.radians([gx_p, gy_p, gz_p])
+
+                            # --- PARSE UPPER (IMU 2) ---
+                            # Indices: Acc(9,10,11), Gyr(14,15,16)
+                            ax_u, ay_u, az_u = float(parts[9]), float(parts[10]), float(parts[11])
+                            gx_u, gy_u, gz_u = float(parts[14]), float(parts[15]), float(parts[16])
+                            
+                            acc_u = np.array([ax_u, ay_u, az_u])
+                            # Convert to radians/sec for Madgwick
+                            gyr_u = np.radians([gx_u, gy_u, gz_u])
+                            
+                            # --- TIME SYNC ---
+                            if start_ms is None:
+                                start_ms = t_ms
+                            t_dev = (t_ms - start_ms)/1000.0
+                            if t0_dev is None:
+                                t0_dev = t_dev
+
+                            # ==========================================
+                            # LOGIC PIPELINE (Original Logic)
+                            # ==========================================
+                            
+                            # 1. Update Filters
+                            # Use bias-corrected gyro if calibrated
+                            g_u_filt = gyr_u if yaw_rel_bias is None else (gyr_u - gyr_u_bias)
+                            q_u = f_upper.updateIMU(gyr=g_u_filt, acc=acc_u, q=q_u)
+                            
+                            g_p_filt = gyr_p if yaw_rel_bias is None else (gyr_p - gyr_p_bias)
+                            q_p = f_pel.updateIMU(gyr=g_p_filt, acc=acc_p, q=q_p)
+
+                            # Collect Gyro Calibration Data
+                            if (t_dev - t0_dev) <= CALIBRATION_SECONDS:
+                                gyr_u_cal.append(gyr_u)
+                                gyr_p_cal.append(gyr_p)
+
+                            # Rotation matrices
+                            Ru = quat_to_R(q_u)
+                            Rp = quat_to_R(q_p)
+
+                            # 2. Stillness check (after calibration)
+                            still_u = is_still(gyr_u - (gyr_u_bias if yaw_rel_bias is not None else 0.0), acc_u)
+                            still_p = is_still(gyr_p - (gyr_p_bias if yaw_rel_bias is not None else 0.0), acc_p)
+
+                            if yaw_rel_bias is not None and still_u and still_p:
+                                if not frozen:
+                                    q_u_freeze = q_u.copy()
+                                    q_p_freeze = q_p.copy()
+                                    frozen = True
+                                q_u = q_u_freeze.copy()
+                                q_p = q_p_freeze.copy()
+                                Ru = quat_to_R(q_u)
+                                Rp = quat_to_R(q_p)
+                            else:
+                                frozen = False
+
+                            # 3. Relative orientation
+                            q_rel = quat_mul(q_u, quat_conj(q_p))
+                            r_rel, p_rel, _ = euler_zyx(q_rel)
+                            _, _, yaw_p = euler_zyx(q_p)
+
+                            # Spine axis dynamic
+                            spine_axis_world_dynamic = Rp @ spine_axis_body
+                            
+                            # Geometric axial angle
+                            axial_geom_calib = axial_angle_about_axis(q_rel, spine_axis_world_dynamic)
+
+                            # ---- CALIBRATION PHASE ----
+                            if (t_dev - t0_dev) <= CALIBRATION_SECONDS:
+                                coll_rel.append(axial_geom_calib)
+                                coll_pel.append(yaw_p)
+                                coll_p_rel.append(p_rel)
+                                coll_r_rel.append(r_rel)
+
+                                pct = min(1.0, (t_dev - t0_dev)/CALIBRATION_SECONDS)
+                                render(0.0, 0.0, 0.0)
+                                print(f" Calibrating… {pct*100:0.0f}%".ljust(20), end="\r", flush=True)
+                                wall_prev = time.perf_counter()
+                                continue 
+
+                            # ---- FINALIZE CALIBRATION ----
+                            if yaw_rel_bias is None:
+                                yaw_rel_bias = float(np.median(coll_rel)) if coll_rel else 0.0
+                                pel_yaw_bias = float(np.median(coll_pel)) if coll_pel else 0.0
+
+                                if gyr_u_cal:
+                                    gyr_u_bias = np.median(np.vstack(gyr_u_cal), axis=0)
+                                if gyr_p_cal:
+                                    gyr_p_bias = np.median(np.vstack(gyr_p_cal), axis=0)
+
+                                if coll_p_rel: p_rel_bias = float(np.median(coll_p_rel))
+                                if coll_r_rel: r_rel_bias = float(np.median(coll_r_rel))
+
+                                # Calibrated spine axis
+                                spine_axis_world_calib = Rp @ spine_axis_body
+                                n_axis = np.linalg.norm(spine_axis_world_calib)
+                                if n_axis > 1e-6:
+                                    spine_axis_world_calib /= n_axis
+                                else:
+                                    spine_axis_world_calib = np.array([1.0, 0.0, 0.0])
+
+                                print_event(f"Calibration Done. Bias: {yaw_rel_bias:+.1f}°", tone="green")
+                                send_ui_event("CALIB_DONE")
+
+                                rel_axial_int = 0.0
+                                last_yaw = None
+                                wall_prev = time.perf_counter()
+                                continue
+
+                            # ---- MEASUREMENT PHASE ----
+                            axis_used = spine_axis_world_calib if spine_axis_world_calib is not None else (Rp @ spine_axis_body)
+                            axial_geom = axial_angle_about_axis(q_rel, axis_used)
+                            
+                            axial_bc = angle_wrap_deg(axial_geom - yaw_rel_bias)
+                            y_pel_dev = angle_wrap_deg(yaw_p - pel_yaw_bias)
+
+                            # Wall clock DT
+                            t_now = time.perf_counter()
+                            dt = 0.0 if wall_prev is None else (t_now - wall_prev)
+                            wall_prev = t_now
+
+                            # Differential gyro rate
+                            gw_u = Ru @ (gyr_u - gyr_u_bias)
+                            gw_p = Rp @ (gyr_p - gyr_p_bias)
+                            rel_omega_world = gw_u - gw_p
+                            
+                            axis_unit = axis_used / (np.linalg.norm(axis_used) + 1e-9)
+                            axial_omega_dps = np.degrees(np.dot(rel_omega_world, axis_unit))
+
+                            moving = (np.degrees(np.linalg.norm(gw_u)) >= STILL_GYR_DPS) \
+                                  or (np.degrees(np.linalg.norm(gw_p)) >= STILL_GYR_DPS)
+
+                            # Integration
+                            if dt > (REL_MIN_DT_FRAC / SAMPLE_HZ):
+                                if moving:
+                                    rel_axial_int += axial_omega_dps * dt
+                                else:
+                                    rel_axial_int *= np.exp(-dt / REL_LEAK_TAU_STILL_S)
+                                    alpha = 0.35
+                                    rel_axial_int = (1.0 - alpha)*rel_axial_int + alpha*axial_bc
+
+                            # Drift Clamp
+                            diff_int_geom = angle_wrap_deg(rel_axial_int - axial_bc)
+                            if abs(diff_int_geom) > REL_MAX_INT_OFFSET_DEG:
+                                rel_axial_int = axial_bc + np.clip(diff_int_geom, -REL_MAX_INT_OFFSET_DEG, REL_MAX_INT_OFFSET_DEG)
+                            rel_axial_int = angle_wrap_deg(rel_axial_int)
+
+                            # Fusion
+                            w_gyro = 0.3 if moving else 0.0
+                            axial_fused = angle_wrap_deg((1.0 - w_gyro)*axial_bc + w_gyro*rel_axial_int)
+
+                            # Smoothing
+                            yaw_buf.append(axial_fused)
+                            if len(yaw_buf) >= max(3, SMOOTH_WINDOW):
+                                if len(yaw_buf) >= SMOOTH_WINDOW and SMOOTH_WINDOW % 2 == 1:
+                                    y_smooth = savgol_filter(np.array(yaw_buf[-SMOOTH_WINDOW:]), SMOOTH_WINDOW, SMOOTH_POLY)[-1]
+                                else:
+                                    y_smooth = yaw_buf[-1]
+                            else:
+                                y_smooth = axial_fused
+
+                            yaw_vel_dps = 0.0
+                            if dt > (REL_MIN_DT_FRAC / SAMPLE_HZ) and last_yaw is not None:
+                                yaw_vel_dps = (y_smooth - last_yaw) / dt
+                            last_yaw = y_smooth
+
+                            # ---- Quality Checks ----
+                            p_rel_dev = p_rel - p_rel_bias
+                            r_rel_dev = r_rel - r_rel_bias
+                            
+                            raw_bending_now = (abs(p_rel_dev) > MAX_COMP_ANGLE_DEG or abs(r_rel_dev) > MAX_COMP_ANGLE_DEG)
+                            raw_pelvis_violation_now = abs(y_pel_dev) > MAX_PELVIS_DRIFT_DEG
+                            too_fast_now = abs(yaw_vel_dps) > MAX_YAW_SPEED_DPS
+
+                            # Hysteresis
+                            BEND_OUT_DEG   = max(0.0, MAX_COMP_ANGLE_DEG - 3.0)
+                            PELVIS_OUT_DEG = max(0.0, MAX_PELVIS_DRIFT_DEG - 3.0)
+
+                            if bending_state:
+                                if (abs(p_rel_dev) <= BEND_OUT_DEG and abs(r_rel_dev) <= BEND_OUT_DEG): bending_state = False
+                            else:
+                                if raw_bending_now: bending_state = True
+
+                            if pelvis_state:
+                                if abs(y_pel_dev) <= PELVIS_OUT_DEG: pelvis_state = False
+                            else:
+                                if raw_pelvis_violation_now: pelvis_state = True
+
+                            bending_now = bending_state
+                            pelvis_violation_now = pelvis_state
+
+                            # ---- REAL-TIME FEEDBACK LOGIC ----
+                            abs_axial = abs(y_smooth)
+                            if abs_axial > DIR_MIN_DEG and moving:
+                                current_dir = 1 if y_smooth >= 0 else -1
+                                
+                                if turn_state_dir == 0 or current_dir != turn_state_dir:
+                                    turn_state_dir = current_dir
+                                    turn_state_start_t = t_dev
+                                    turn_state_last_fb_t = -1e9
+                                    warned_speed_this_turn = False
+                                    warned_bend_this_turn = False
+                                    warned_pelvis_this_turn = False
+                                    warned_depth_this_turn = False
+
+                                time_in_turn = t_dev - turn_state_start_t
+                                time_since_fb = t_dev - turn_state_last_fb_t
+                                
+                                if time_since_fb >= TURN_FEEDBACK_INTERVAL_S:
+                                    dir_sign = turn_state_dir
+                                    dir_str = "right" if dir_sign > 0 else "left"
+                                    target_for_dir = AXIAL_TARGET_RIGHT_DEG if dir_sign > 0 else AXIAL_TARGET_LEFT_DEG
+                                    same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
+                                    
+                                    msgs = []
+                                    if too_fast_now and not warned_speed_this_turn:
+                                        msgs.append(f"Slow down while turning {dir_str}.")
+                                        warned_speed_this_turn = True
+                                        send_ui_event("SLOW_DOWN")
+                                    
+                                    if bending_now and not warned_bend_this_turn:
+                                        msgs.append(f"Keep your trunk more upright while turning {dir_str}.")
+                                        warned_bend_this_turn = True
+                                        send_ui_event("UPRIGHT")
+
+                                    if pelvis_violation_now and not warned_pelvis_this_turn:
+                                        msgs.append(f"Keep your hips still while turning {dir_str}.")
+                                        warned_pelvis_this_turn = True
+                                        send_ui_event("HIPS_STILL")
+
+                                    if (time_in_turn > DEPTH_WARN_MIN_TIME_S and same_direction_motion and 
+                                        abs_axial < DEPTH_WARN_FRACTION * target_for_dir and not warned_depth_this_turn):
+                                        msgs.append(f"Rotate further to the {dir_str}.")
+                                        warned_depth_this_turn = True
+                                        send_ui_event("ROTATE_FURTHER")
+
+                                    if msgs:
+                                        beep()
+                                        print_event(" ".join(msgs), tone="yellow")
+                                        turn_state_last_fb_t = t_dev
+                            else:
+                                if abs_axial < TURN_END_DEG or not moving:
+                                    turn_state_dir = 0
+                                    turn_state_start_t = t_dev
+                                    turn_state_last_fb_t = -1e9
+                                    warned_speed_this_turn = False
+                                    warned_bend_this_turn = False
+                                    warned_pelvis_this_turn = False
+                                    warned_depth_this_turn = False
+
+                            # ---- REP DETECTION ----
+                            up_th    = AXIAL_TARGET_RIGHT_DEG
+                            down_th  = -AXIAL_TARGET_LEFT_DEG
+                            exit_pos = up_th - YAW_HYST_DEG
+                            exit_neg = down_th + YAW_HYST_DEG
+
+                            # Right Rep
+                            if (not zone_pos) and (y_smooth >= up_th) and ((t_dev - last_peak_t) >= MIN_REP_GAP_S):
+                                zone_pos = True
+                                zone_neg = False
+                                peaks_R.append((t_dev, y_smooth))
+                                last_peak_t = t_dev
+                                beep()
+                                print_event(f"✓ Target reached (Right) at {y_smooth:+.1f}°", tone="green")
+                                send_ui_event("REP_REACHED")
+                                
+                                rep_duration = t_dev - turn_state_start_t
+                                if rep_duration < REP_MIN_DURATION_S:
+                                    print_event(f"Rep too fast (Right): {rep_duration:.2f}s", tone="yellow")
+                                    send_ui_event("REP_TOO_FAST")
+                                elif rep_duration > REP_MAX_DURATION_S:
+                                    print_event(f"Rep too slow (Right): {rep_duration:.2f}s", tone="yellow")
+                                    send_ui_event("REP_TOO_SLOW")
+
+                            # Left Rep
+                            if (not zone_neg) and (y_smooth <= down_th) and ((t_dev - last_peak_t) >= MIN_REP_GAP_S):
+                                zone_neg = True
+                                zone_pos = False
+                                peaks_L.append((t_dev, y_smooth))
+                                last_peak_t = t_dev
+                                beep()
+                                print_event(f"✓ Target reached (Left) at {y_smooth:+.1f}°", tone="green")
+                                send_ui_event("REP_REACHED")
+
+                                rep_duration = t_dev - turn_state_start_t
+                                if rep_duration < REP_MIN_DURATION_S:
+                                    print_event(f"Rep too fast (Left): {rep_duration:.2f}s", tone="yellow")
+                                    send_ui_event("REP_TOO_FAST")
+                                elif rep_duration > REP_MAX_DURATION_S:
+                                    print_event(f"Rep too slow (Left): {rep_duration:.2f}s", tone="yellow")
+                                    send_ui_event("REP_TOO_SLOW")
+
+                            # Hysteresis exit
+                            if zone_pos and y_smooth < exit_pos: zone_pos = False
+                            if zone_neg and y_smooth > exit_neg: zone_neg = False
+
+                            render(y_smooth, yaw_vel_dps, y_pel_dev)
+                            # NEW: Press 'z' to Re-Center (Tare)
+                            if msvcrt.kbhit():
+                                key = msvcrt.getch().decode('utf-8').lower()
+                                if key == 'z':
+                                    # Set the current raw angle as the new 'Zero'
+                                    yaw_rel_bias = axial_geom
+                                    # Reset the drift integrator so it doesn't fzight the new zero
+                                    rel_axial_int = 0.0 
+                                    # Also reset the 'smooth' buffer so the bar snaps instantly
+                                    yaw_buf = [0.0] * SMOOTH_WINDOW
+                                    
+                                    print_event(f"!!! RE-CENTERED !!! New Bias: {yaw_rel_bias:.1f}", tone="cyan")
+                                    beep()
+
+                        except ValueError:
+                            pass
 
     except KeyboardInterrupt:
         sys.stdout.write("\n")
         print("Stopping…")
-    except (ConnectionError, OSError) as e:
+    except Exception as e:
         sys.stdout.write("\n")
-        print(f"Connection error: {e}")
+        print(f"Error: {e}")
     finally:
-        try:
-            s.close()
-        except Exception:
-            pass
-
-        global ui_socket
+        try: s_serial.close()
+        except: pass
+        
         if ui_socket is not None:
-            try:
-                ui_socket.close()
-            except Exception:
-                pass
+            try: ui_socket.close()
+            except: pass
 
         nL, nR = len(peaks_L), len(peaks_R)
         print(color(f"\nSession summary: peaks L={nL}, R={nR}", "bold"))
-        if peaks_L:
-            peaks_L_values = [v for _, v in peaks_L]
-            print(f"  Left mean peak:  {np.mean(peaks_L_values):.1f}°")
-        if peaks_R:
-            peaks_R_values = [v for _, v in peaks_R]
-            print(f"  Right mean peak: {np.mean(peaks_R_values):.1f}°")
-        if peaks_L and peaks_R:
-            print(f"  Asymmetry (R-L): {np.mean([v for _, v in peaks_R]) - np.mean([v for _, v in peaks_L]):+.1f}°")
         print("Done.")
 
 if __name__ == "__main__":
