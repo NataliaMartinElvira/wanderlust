@@ -11,7 +11,10 @@ import os
 
 # MAKE SURE THIS NAME MATCHES YOUR FILE EXACTLY
 PARTICIPANT_FILES = [
-    "imu_seated_march_20251124_201439.xlsx"
+    "imu_seated_march_20251124_201439.xlsx",
+    "imu_seated_march_20251125_181500.xlsx",
+    "imu_seated_march_20251124_203520.xlsx"
+
 ]
 
 SHEET_NAME = "reps"

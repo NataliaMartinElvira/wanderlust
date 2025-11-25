@@ -10,7 +10,7 @@ from scipy.signal import butter, sosfiltfilt
 # =========================
 # CONFIG
 # =========================
-SERIAL_PORT = 'COM6'      # <--- VERIFY YOUR PORT
+SERIAL_PORT = 'COM7'      # <--- VERIFY YOUR PORT
 BAUD_RATE = 115200
 
 # PARSING CONFIG
