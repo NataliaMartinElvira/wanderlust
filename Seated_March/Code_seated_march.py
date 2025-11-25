@@ -1,4 +1,4 @@
-import socket
+import serial
 import time
 import datetime as dt
 from pathlib import Path
@@ -10,8 +10,11 @@ from scipy.signal import butter, sosfiltfilt
 # =========================
 # CONFIG
 # =========================
-HOST = "192.168.4.1"
-PORT = 3333
+SERIAL_PORT = 'COM6'      # <--- VERIFY YOUR PORT
+BAUD_RATE = 115200
+
+# PARSING CONFIG
+LEN_V1 = 9 
 
 SHEET_RAW = "IMU"
 SHEET_REPS = "reps"
@@ -28,22 +31,19 @@ SAVE_EVERY_ROWS = 200
 # Sampling / detection params
 FS = 50.0
 LOW, HIGH, ORDER = 0.25, 2.5, 4
-# Lowered so tiny lifts still form peaks
-VM_PEAK_THR_G = 0.01   # candidate peak threshold (g), previously 0.02
 
-# Physiological constraints (robust timing)
-MAX_STEP_RATE_SPM = 35   # seated marching typical max total cadence
-MIN_STEP_S = 1.0         # min time between same-leg steps (s)
-MAX_STEP_S = 4.0         # max time (allow pauses)
+# --- MODIFIED THRESHOLD ---
+VM_PEAK_THR_G = 0.0005   # <--- Set to 0.0005 as requested
 
-# Single-IMU-on-one-leg → estimate bilateral cadence by ×2
+# Single-IMU-on-one-leg
 SINGLE_IMU_ONE_LEG = True
 BILATERAL_FACTOR = 2.0
 
-# === Coaching thresholds (only for flags/feedback) ===
-COACH_MIN_AMP_G = 0.03   # now the ONLY amplitude threshold (feedback only)
-COACH_MIN_SPM   = 8.0    # total steps/min below → too_slow=True
-COACH_MAX_SPM   = 20.0   # total steps/min above → too_fast=True
+# === Coaching thresholds ===
+COACH_MIN_AMP_G = 0.03    
+# Note: SPM thresholds exist but won't block the step count anymore
+COACH_MIN_SPM   = 8.0     
+COACH_MAX_SPM   = 20.0    
 
 
 def now_ts():
@@ -54,17 +54,17 @@ def now_ts():
 # SIGNAL UTILITIES
 # =========================
 def bandpass_vm(ax, ay, az, fs=FS, low=LOW, high=HIGH, order=ORDER):
-    # Vector magnitude, mean-centered
     vm = np.sqrt(ax*ax + ay*ay + az*az)
     vm = vm - np.nanmean(vm)
-    if len(vm) < 28:  # avoid filtfilt issues for very short buffers
+    if len(vm) < 28: 
         return vm
     sos = butter(order, [low/(fs/2), high/(fs/2)], btype="band", output="sos")
     return sosfiltfilt(sos, vm)
 
 
-def detect_candidate_peaks(signal, fs=FS, min_height=VM_PEAK_THR_G, min_distance_s=0.1):
-    """Find positive local maxima above a low threshold."""
+def detect_candidate_peaks(signal, fs=FS, min_height=VM_PEAK_THR_G, min_distance_s=0.2):
+    # Increased min_distance slightly to avoid double counting vibration, 
+    # but NOT filtering for rhythm.
     min_distance = int(min_distance_s * fs)
     peaks, last_i = [], -10**9
     for i in range(1, len(signal)-1):
@@ -74,12 +74,11 @@ def detect_candidate_peaks(signal, fs=FS, min_height=VM_PEAK_THR_G, min_distance
     return np.array(peaks, dtype=int)
 
 
-def merge_step_peaks(peaks, signal, fs=FS, max_step_rate_spm=MAX_STEP_RATE_SPM):
-    """Group very-close peaks (same-step double-peak) and keep the tallest."""
+def merge_step_peaks(peaks, signal, fs=FS):
+    # Simplified merge logic (debounce)
     if len(peaks) == 0:
         return peaks
-    min_step_period = 60.0 / max_step_rate_spm       # s per step (total)
-    cluster_window = int((min_step_period/2.0) * fs) # half-period window
+    cluster_window = int(0.3 * fs) 
 
     selected = []
     cluster = [peaks[0]]
@@ -94,33 +93,16 @@ def merge_step_peaks(peaks, signal, fs=FS, max_step_rate_spm=MAX_STEP_RATE_SPM):
     return np.array(selected, dtype=int)
 
 
-def filter_steps_by_timing(peaks, fs=FS, min_step_s=MIN_STEP_S, max_step_s=MAX_STEP_S):
-    """
-    Keep steps based on reasonable timing ONLY.
-    No amplitude rejection here (so even tiny steps survive to get feedback).
-    """
-    if len(peaks) == 0:
-        return peaks
-    valid, last_t = [], None
-    for idx in peaks:
-        t_cur = idx / fs
-        if last_t is None:
-            valid.append(idx); last_t = t_cur
-        else:
-            dt_s = t_cur - last_t
-            if dt_s < min_step_s:
-                continue
-            # if dt_s > max_step_s: accept anyway (slow/paused step)
-            valid.append(idx); last_t = t_cur
-    return np.array(valid, dtype=int)
-
-
 def detect_steps(vm_f, fs=FS):
-    peaks_cand = detect_candidate_peaks(vm_f, fs=fs, min_height=VM_PEAK_THR_G, min_distance_s=0.1)
-    peaks_merged = merge_step_peaks(peaks_cand, vm_f, fs=fs, max_step_rate_spm=MAX_STEP_RATE_SPM)
-    steps = filter_steps_by_timing(peaks_merged, fs=fs,
-                                   min_step_s=MIN_STEP_S, max_step_s=MAX_STEP_S)
-    return steps
+    # 1. Detect Peaks with new threshold
+    peaks_cand = detect_candidate_peaks(vm_f, fs=fs, min_height=VM_PEAK_THR_G)
+    
+    # 2. Merge doubles
+    peaks_merged = merge_step_peaks(peaks_cand, vm_f, fs=fs)
+    
+    # 3. NO TIMING FILTER
+    # We return all peaks found, regardless of how slow/fast they were
+    return peaks_merged
 
 
 def periodicity_score(signal, fs=FS, min_p=0.4, max_p=2.0):
@@ -137,15 +119,9 @@ def periodicity_score(signal, fs=FS, min_p=0.4, max_p=2.0):
 
 
 # =========================
-# METRICS & REPS TABLE (boolean flags)
+# METRICS & REPS TABLE
 # =========================
 def compute_metrics(raw_df):
-    """
-    Returns:
-      reps_df columns: t_ms, amp_g, spm_est, amp_low, too_slow, too_fast, good_rep
-      and a summary dict.
-    """
-    # Empty guard
     if raw_df.empty:
         reps_df = pd.DataFrame(columns=[
             "t_ms","amp_g","spm_est","amp_low","too_slow","too_fast","good_rep"
@@ -156,7 +132,6 @@ def compute_metrics(raw_df):
         }
         return reps_df, metrics
 
-    # Extract numeric arrays robustly
     t  = pd.to_numeric(raw_df["time_ms"],  errors="coerce").values.astype(float)
     ax = pd.to_numeric(raw_df["acc_x_g"],  errors="coerce").values.astype(float)
     ay = pd.to_numeric(raw_df["acc_y_g"],  errors="coerce").values.astype(float)
@@ -169,29 +144,36 @@ def compute_metrics(raw_df):
     amp       = vm_f[step_idx] if len(step_idx) else np.array([], dtype=float)
     n_steps   = len(rep_times)
 
-    # Per-leg SPM estimate from previous IPI
+    # --- DIFFERENCE OF TIME CALCULATION ---
+    # We still calculate this for information, but we won't use it to block the step
     spm_est = np.full(n_steps, np.nan, dtype=float)
     if n_steps > 1:
-        ipi_s = np.diff(rep_times) / 1000.0
-        spm_est[1:] = 60.0 / np.clip(ipi_s, 1e-6, None)
+        # Here is the difference of time logic:
+        ipi_s = np.diff(rep_times) / 1000.0 
+        with np.errstate(divide='ignore'):
+            spm_est[1:] = 60.0 / np.clip(ipi_s, 1e-6, None)
 
-    # Convert to bilateral total SPM if only one leg is sensed
     if SINGLE_IMU_ONE_LEG:
         spm_est = spm_est * BILATERAL_FACTOR
 
-    # Boolean flags (fixed dtype and length)
-    amp_low  = np.zeros(n_steps, dtype=bool)
-    too_slow = np.zeros(n_steps, dtype=bool)
-    too_fast = np.zeros(n_steps, dtype=bool)
-
     if n_steps > 0:
-        amp_low[:] = amp < COACH_MIN_AMP_G
+        amp_low  = amp < COACH_MIN_AMP_G
+        
+        # We calculate these just for the Excel record
         valid_spm = np.isfinite(spm_est)
+        too_slow = np.zeros(n_steps, dtype=bool)
+        too_fast = np.zeros(n_steps, dtype=bool)
+        
         too_slow[valid_spm] = spm_est[valid_spm] < COACH_MIN_SPM
         too_fast[valid_spm] = spm_est[valid_spm] > COACH_MAX_SPM
+    else:
+        amp_low = np.array([], dtype=bool)
+        too_slow = np.array([], dtype=bool)
+        too_fast = np.array([], dtype=bool)
 
-    # Good rep: amp ok AND cadence within range (or cadence unknown for 1st rep)
-    good_rep = (~amp_low) & (~too_slow) & (~too_fast)
+    # --- MODIFIED EVALUATION ---
+    # A rep is good if Amplitude is enough. We IGNORE timing (too_slow/too_fast).
+    good_rep = (~amp_low)
 
     reps_df = pd.DataFrame({
         "t_ms":     rep_times,
@@ -203,7 +185,6 @@ def compute_metrics(raw_df):
         "good_rep": good_rep,
     })
 
-    # Session metrics (cadence in total steps/min if SINGLE_IMU_ONE_LEG)
     duration_min = (t[-1] - t[0]) / 60000.0 if len(t) > 1 else 0.0
     factor = (BILATERAL_FACTOR if SINGLE_IMU_ONE_LEG else 1.0)
     cadence = (n_steps * factor) / duration_min if duration_min > 0 else 0.0
@@ -239,128 +220,94 @@ def save_excel(out_path, raw_df):
 
 
 # =========================
-# TCP & MAIN
+# MAIN
 # =========================
-def connect():
-    while True:
-        try:
-            print(f"Connecting to {HOST}:{PORT} …")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(10)
-            s.connect((HOST, PORT))
-            s.settimeout(None)
-            print("Connected.")
-            return s
-        except Exception as e:
-            print(f"Connect failed: {e}. Retrying in 2s…")
-            time.sleep(2)
-
-
 def main():
     timestamp = now_ts()
-    out_path = Path(__file__).parent / f"imu_seated_march_{timestamp}.xlsx"
+    out_path = Path(__file__).parent / f"imu_seated_march_SERIAL_{timestamp}.xlsx"
     print(f"Saving raw+metrics to: {out_path}")
 
     rows = []
-    buffer = ""
     last_save = time.time()
-    header_seen = False
-    last_reported_reps = 0  # how many steps already printed
+    last_reported_reps = 0 
 
-    s = connect()
+    print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE} baud...")
+    
     try:
+        s = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        print("Connected. Waiting for V1_ACCEL data...")
+
         while True:
-            data = s.recv(2048)
-            if not data:
-                raise ConnectionError("Remote closed")
-            buffer += data.decode("utf-8", errors="ignore")
+            if s.in_waiting > 0:
+                line = s.readline().decode("utf-8", errors="ignore").strip()
+                
+                parts = []
+                if line.startswith("V1_ACCEL:"):
+                    clean_line = line.replace("V1_ACCEL:", "")
+                    temp_parts = clean_line.split(',')
+                    if len(temp_parts) == LEN_V1:
+                        parts = temp_parts
 
-            while "\n" in buffer:
-                line, buffer = buffer.split("\n", 1)
-                line = line.strip()
-                if not line:
-                    continue
-                parts = [p.strip() for p in line.split(",")]
+                if len(parts) == LEN_V1:
+                    rows.append(parts)
 
-                if not header_seen:
-                    if parts == HEADERS:
-                        header_seen = True
-                        print("Header received.")
-                        continue
-                    else:
-                        header_seen = True  # mid-stream
+                    # Save & Process
+                    if (time.time() - last_save >= SAVE_EVERY_SECONDS) or (len(rows) >= SAVE_EVERY_ROWS):
+                        df_new = pd.DataFrame(rows, columns=HEADERS)
+                        for c in HEADERS: df_new[c] = pd.to_numeric(df_new[c], errors="coerce")
 
-                if len(parts) != len(HEADERS):
-                    continue
+                        if out_path.exists():
+                            try:
+                                df_exist = pd.read_excel(out_path, sheet_name=SHEET_RAW, engine="openpyxl")
+                            except:
+                                df_exist = pd.DataFrame(columns=HEADERS)
+                            raw_df = pd.concat([df_exist, df_new], ignore_index=True)
+                        else:
+                            raw_df = df_new
 
-                rows.append(parts)
+                        reps_count, m, reps_df = save_excel(out_path, raw_df)
+                        rows.clear()
+                        last_save = time.time()
 
-                if (time.time() - last_save >= SAVE_EVERY_SECONDS) or (len(rows) >= SAVE_EVERY_ROWS):
-                    df_new = pd.DataFrame(rows, columns=HEADERS)
-                    for c in HEADERS:
-                        df_new[c] = pd.to_numeric(df_new[c], errors="coerce")
+                        # Print flags for any NEW steps
+                        if not reps_df.empty and reps_count > last_reported_reps:
+                            new = reps_df.iloc[last_reported_reps:reps_count]
+                            for _, r in new.iterrows():
+                                t_s = float(r["t_ms"])/1000.0
+                                # Print status
+                                status = "OK" if r['good_rep'] else "WEAK"
+                                print(
+                                    f"[STEP] t={t_s:.2f}s | "
+                                    f"Amp={float(r['amp_g']):.4f}g | "
+                                    f"Status={status}"
+                                )
+                            last_reported_reps = reps_count
 
-                    if out_path.exists():
-                        try:
-                            df_exist = pd.read_excel(out_path, sheet_name=SHEET_RAW, engine="openpyxl")
-                        except Exception:
-                            df_exist = pd.DataFrame(columns=HEADERS)
-                        raw_df = pd.concat([df_exist, df_new], ignore_index=True)
-                    else:
-                        raw_df = df_new
-
-                    reps_count, m, reps_df = save_excel(out_path, raw_df)
-                    rows.clear()
-                    last_save = time.time()
-
-                    # print flags for any NEW steps (even tiny ones)
-                    if not reps_df.empty and reps_count > last_reported_reps:
-                        new = reps_df.iloc[last_reported_reps:reps_count]
-                        for _, r in new.iterrows():
-                            t_s = float(r["t_ms"])/1000.0
-                            spm = r["spm_est"]
-                            print(
-                                f"[STEP] t={t_s:.2f}s amp={float(r['amp_g']):.3f}g "
-                                f"flags: amp_low={bool(r['amp_low'])} "
-                                f"too_slow={bool(r['too_slow'])} "
-                                f"too_fast={bool(r['too_fast'])} "
-                                f"good_rep={bool(r['good_rep'])} "
-                                f"(spm_total_est={'' if np.isnan(spm) else f'{float(spm):.1f}'})"
-                            )
-                        last_reported_reps = reps_count
-
-                    # console summary
-                    print(
-                        f"Saved: rows={len(raw_df)} | reps={reps_count} | "
-                        f"cadence_total={m['cadence_spm']:.1f} spm | amp_mean={m['mean_amp_g']:.3f} g | "
-                        f"rhythm_SD={m['ipi_sd_s']:.2f} s | periodicity={m['periodicity']:.2f}"
-                    )
+                        # Console Summary
+                        print(
+                            f"\rSaved: rows={len(raw_df)} | reps={reps_count} | "
+                            f"Avg Amp={m['mean_amp_g']:.4f} g    ",
+                            end=''
+                        )
 
     except KeyboardInterrupt:
-        print("\nStopping…")
+        print("\nStopping...")
+        s.close()
     finally:
-        try:
-            s.close()
-        except Exception:
-            pass
-
-        # flush last partial buffer
+        if 's' in locals() and s.is_open: s.close()
+        
+        # Final Save
         if rows:
             df_new = pd.DataFrame(rows, columns=HEADERS)
-            for c in HEADERS:
-                df_new[c] = pd.to_numeric(df_new[c], errors="coerce")
+            for c in HEADERS: df_new[c] = pd.to_numeric(df_new[c], errors="coerce")
             if out_path.exists():
                 try:
-                    df_exist = pd.read_excel(out_path, sheet_name=SHEET_RAW, engine="openpyxl")
-                except Exception:
-                    df_exist = pd.DataFrame(columns=HEADERS)
-                raw_df = pd.concat([df_exist, df_new], ignore_index=True)
-            else:
-                raw_df = df_new
-            save_excel(out_path, raw_df)
-
-        print(f"Excel file saved to: {out_path}")
-
+                    old = pd.read_excel(out_path, sheet_name=SHEET_RAW)
+                    raw = pd.concat([old, df_new])
+                except: raw = df_new
+            else: raw = df_new
+            save_excel(out_path, raw)
+            print("\nFinal Excel file saved to:", out_path)
 
 if __name__ == "__main__":
     main()

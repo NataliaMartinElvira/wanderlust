@@ -12,9 +12,9 @@ HOST = "192.168.4.1"
 PORT = 3333
 
 # --- REAL DIMENSIONS (CM) ---
-OBSTACLE_HEIGHT_CM = 15.0   
-OBSTACLE_DEPTH_CM  = 20.0   
-SAFETY_MARGIN_CM   = 5.0    
+OBSTACLE_HEIGHT_CM = 6.0   
+OBSTACLE_DEPTH_CM  = 6.0   
+SAFETY_MARGIN_CM   = 3.0    
 
 # --- ANTI-CHEAT FILTERS ---
 # A real step to overcome an object requires control.
