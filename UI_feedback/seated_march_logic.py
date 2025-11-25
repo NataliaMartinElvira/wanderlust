@@ -8,7 +8,6 @@ import warnings
 # CONSTANTS (From user's validated script)
 # =========================
 FS = 50.0 
-# Adjusted LOW frequency to capture slow movements without removing movement entirely
 LOW, HIGH, ORDER = 0.15, 2.5, 4 
 VM_PEAK_THR_G = 0.01   
 
@@ -21,9 +20,6 @@ SINGLE_IMU_ONE_LEG = True
 BILATERAL_FACTOR = 2.0
 # Using user's threshold. Feedback is triggered if amplitude < 0.03g
 COACH_MIN_AMP_G = 0.03   
-# We IGNORE these metrics, but keep the constants for structure
-COACH_MIN_SPM   = 8.0    
-COACH_MAX_SPM   = 20.0   
 
 
 # =========================
@@ -94,7 +90,7 @@ def compute_coaching_flags(raw_df):
     if raw_df.empty or len(raw_df) < 28: 
         return (0, 0.0, False)
 
-    # Data Extraction
+    # Data Extraction (Crucial: converting DataFrame columns to NumPy arrays)
     ax = pd.to_numeric(raw_df["acc_x_g"],  errors="coerce").values.astype(float)
     ay = pd.to_numeric(raw_df["acc_y_g"],  errors="coerce").values.astype(float)
     az = pd.to_numeric(raw_df["acc_z_g"],  errors="coerce").values.astype(float)
