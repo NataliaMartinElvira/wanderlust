@@ -4,6 +4,7 @@ import datetime as dt
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import json # Import json for potential future use or structured logs
 
 # ==========================================
 # 1. CONFIGURATION
@@ -41,7 +42,7 @@ def now_ts():
     return dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # =========================
-# 2. LOGIC CLASSES (KEPT EXACTLY AS REQUESTED)
+# 2. LOGIC CLASSES
 # =========================
 
 class SensorCalibrator:
@@ -95,7 +96,7 @@ class ObstacleStepAnalyzer:
                 self.state = "MOVING"
                 self.buffer = []
                 self.start_time = current_time
-                print(f"--> Starting movement...")
+                # print(f"--> Starting movement...") # REMOVED PRINT
 
         elif self.state == "MOVING":
             self.buffer.append({
@@ -128,35 +129,43 @@ class ObstacleStepAnalyzer:
         total_rotation = df['g_mag'].sum() * 0.02 
         
         # --- LOCK 1: TIME CONTROL ---
-        # If it was too fast, it is a spasm or kick, not a controlled step.
         if duration < MIN_STEP_DURATION_S:
-            return {
-                "step_detected": True,
-                "fail_reason": "TOO_FAST",
-                "metrics": {"duration": duration, "peak_force": peak_force}
+            # Generate Unity Feedback Payload for TOO_FAST failure
+            unity_payload = {
+                "step_ok": False,
+                "fail_fast": True,
+                "fail_h": False,
+                "fail_a": False,
+                "duration": duration
             }
+            self._log_and_print_feedback(unity_payload, "TOO_FAST", {"duration": duration})
+            return unity_payload
 
-        # --- LOCK 2: HEIGHT (Improved Hybrid Logic) ---
+        # --- LOCK 2 & 3: QUALITY CONTROL ---
         
-        # A) Via Knee Flexion
-        # Pitch required: 1 degree per cm (softer requirement)
+        # Height Logic
         req_pitch = 5.0 + (self.target_height * 1.0)
         passed_flexion = (pitch_range >= req_pitch)
         
-        # B) Via Block Lifting (Hip Flexion)
-        # We require Peak Force AND Sustained Average Force.
         req_peak_force = 0.25 + (self.target_height * 0.01)
         req_avg_force  = 0.05 + (self.target_height * 0.002) 
-        
         passed_lift = (peak_force >= req_peak_force) and (avg_force >= req_avg_force)
-        
         success_height = passed_flexion or passed_lift
         
-        # --- LOCK 3: AMPLITUDE (Step Length) ---
+        # Amplitude Logic
         req_rotation = 15.0 + (self.target_depth * 0.6)
         success_amplitude = (total_rotation >= req_rotation)
 
-        # --- FINAL RESULT ---
+        # --- GENERATE FINAL UNITY PAYLOAD ---
+        unity_payload = {
+            "step_ok": success_height and success_amplitude,
+            "fail_fast": False,
+            "fail_h": not success_height,
+            "fail_a": not success_amplitude,
+            "duration": duration
+        }
+        
+        # --- CONSOLE LOGGING (for developer) ---
         self.feedback = {
             "step_detected": True,
             "fail_reason": None, 
@@ -171,28 +180,35 @@ class ObstacleStepAnalyzer:
             }
         }
         
-        # --- CONSOLE PRINT ---
-        print("\n" + "="*40)
-        print(f"QUALITY ANALYSIS (Duration: {duration:.2f}s)")
+        self._log_and_print_feedback(unity_payload, "QUALITY", self.feedback["metrics"])
         
-        if passed_flexion:
-            print(f" > Strategy: KNEE FLEXION (Pitch: {pitch_range:.1f} deg)")
-        elif passed_lift:
-             print(f" > Strategy: HIP STRENGTH (Sustained Force)")
-        else:
-             print(f" > Strategy: NOT DETECTED (Insufficient movement)")
-             print(f"   (Pitch: {pitch_range:.1f} deg | PeakG: {peak_force:.2f}g | AvgG: {avg_force:.3f}g)")
+        return unity_payload
 
-        if success_height and success_amplitude:
-            print("\n ✅ CORRECT STEP! (Passed)")
+    def _log_and_print_feedback(self, payload, analysis_type, metrics):
+        """Prints formatted feedback to console and sends the structured payload data string for Unity."""
+        
+        print("\n" + "="*40)
+        print(f"ANALYSIS RESULT (Type: {analysis_type} | Duration: {payload['duration']:.2f}s)")
+        
+        if analysis_type == "TOO_FAST":
+            print(" [!] STEP REJECTED: TOO FAST. Do it smoothly and controlled.")
+        
+        elif payload["step_ok"]:
+            print(" ✅ CORRECT STEP! (Passed)")
+        
         else:
-            print("\n ❌ INCORRECT MOVEMENT")
-            if not success_height: print("    - Height Failure (Lift higher or hold foot up)")
-            if not success_amplitude: print("    - Amplitude Failure (Step too short)")
-            
+            print(" ❌ INCORRECT MOVEMENT")
+            if payload["fail_h"]: 
+                print("    - Height Failure (Lift higher or hold foot up)")
+            if payload["fail_a"]: 
+                print("    - Amplitude Failure (Step too short)")
+                
         print("="*40 + "\n")
-
-        return self.feedback
+        
+        # STRUCTURED FEEDBACK OUTPUT FOR UNITY (to be read via serial/TCP connection)
+        # Format: step_ok, fail_fast, fail_h, fail_a, duration
+        # Example: UNITY_FEEDBACK:True,False,False,False,1.55
+        print(f"UNITY_FEEDBACK:{payload['step_ok']},{payload['fail_fast']},{payload['fail_h']},{payload['fail_a']},{payload['duration']:.2f}")
 
 # =========================
 # 3. CONNECTION & MAIN
@@ -284,8 +300,8 @@ def main():
                         if result:
                             # If step was rejected for being too fast
                             if result.get("fail_reason") == "TOO_FAST":
-                                print(f" [!] TOO FAST! ({result['metrics']['duration']:.2f}s)")
-                                print("     Do it smoothly and controlled. No kicking.\n")
+                                # The feedback function handles printing the rejection message and the UNITY_FEEDBACK string
+                                pass 
                             else:
                                 log = result["metrics"]
                                 log.update({
