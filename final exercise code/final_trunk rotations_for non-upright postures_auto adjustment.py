@@ -14,7 +14,7 @@ import socket # Keep socket for Unity TCP
 # =========================
 # CONFIGURATION
 # =========================
-SERIAL_PORT = 'COM6'      # <--- CHECK YOUR PORT
+SERIAL_PORT = 'COM8'      # <--- CHECK YOUR PORT
 BAUD_RATE = 115200
 
 # Packet Config for V2_ACCEL
@@ -32,8 +32,8 @@ SAMPLE_HZ               = 20.0
 CALIBRATION_SECONDS     = 3.0   # assume patient sits still (their personal upright)
 
 # Coaching targets (side-specific)
-AXIAL_TARGET_RIGHT_DEG  = 8.0   # target axial rotation for RIGHT (positive)
-AXIAL_TARGET_LEFT_DEG   = 8.0   # target axial rotation for LEFT  (positive magnitude). z
+AXIAL_TARGET_RIGHT_DEG  = 7.0   # target axial rotation for RIGHT (positive)
+AXIAL_TARGET_LEFT_DEG   = 7.0   # target axial rotation for LEFT  (positive magnitude). z
 YAW_HYST_DEG            = 5.0    # hysteresis around each target
 
 MAX_YAW_SPEED_DPS       = 120.0  # instantaneous max speed for "Slow down"
@@ -64,12 +64,20 @@ REL_MIN_DT_FRAC         = 0.4    # dt guard fraction of 1/SAMPLE_HZ
 REL_MAX_INT_OFFSET_DEG  = 25.0   # max allowed difference between integrator and geometry
 
 # Real-time per-turn feedback settings
-DIR_MIN_DEG                 = 5.0   # |axial| to consider "actively turning"
+DIR_MIN_DEG                 = 3.1   # |axial| to consider "actively turning"
 TURN_END_DEG                = 3.0   # |axial| below this => turn stopped
 TURN_FEEDBACK_INTERVAL_S    = 0.4   # min time between messages during SAME turn
-DEPTH_WARN_FRACTION         = 0.6   # say "rotate further" if below this fraction of target
+DEPTH_WARN_FRACTION         = 0.9   # say "rotate further" if below this fraction of target
 DEPTH_WARN_MIN_TIME_S       = 0.2   # wait a short time before depth warning
-MIN_DEPTH_VEL_DPS           = 3.0   # min velocity in same direction to give "rotate further"
+MIN_DEPTH_VEL_DPS           = 1.0   # min velocity in same direction to give "rotate further"
+
+# Auto-tare settings (based on missing reps + axial offset)
+AUTO_TARE_MIN_REPS         = 1      # wait until at least this many reps have occurred
+AUTO_TARE_NO_REP_S         = 8.0    # if no rep for this long, and offset is large, auto-tare
+AXIAL_AUTO_TARE_MIN_DEG    = 8.0    # minimum |axial| to consider as "offset"
+AXIAL_AUTO_TARE_MAX_DEG    = 45.0   # ignore totally extreme values / weird poses
+AUTO_TARE_MAX_VEL_DPS      = 5.0    # consider "rest-ish" if |axial velocity| is below this
+
 
 # ---------- Utilities ----------
 
@@ -430,8 +438,16 @@ def main():
                                     spine_axis_world_calib /= n_axis
                                 else:
                                     spine_axis_world_calib = np.array([1.0, 0.0, 0.0])
-
-                                print_event(f"Calibration Done. Bias: {yaw_rel_bias:+.1f}°", tone="green")
+                                
+                                print_event(
+                                    f"Calibration done. "
+                                    f"Axial bias {yaw_rel_bias:+.1f}°, pelvis yaw bias {pel_yaw_bias:+.1f}°. "
+                                    f"Gyro biases z (upper, pelvis) = "
+                                    f"{np.degrees(gyr_u_bias[2]):+.3f}°/s, {np.degrees(gyr_p_bias[2]):+.3f}°/s. "
+                                    f"Rel posture bias (roll, pitch) = {r_rel_bias:+.1f}°, {p_rel_bias:+.1f}°",
+                                    tone="green"
+                                )
+                                
                                 send_ui_event("CALIB_DONE")
 
                                 rel_axial_int = 0.0
@@ -521,6 +537,44 @@ def main():
                             bending_now = bending_state
                             pelvis_violation_now = pelvis_state
 
+
+                            # ---- AUTO-TARE LOGIC (based on missing reps + axial offset) ----
+                            total_reps = len(peaks_L) + len(peaks_R)
+                            if (yaw_rel_bias is not None) and (total_reps >= AUTO_TARE_MIN_REPS):
+                                # Time since the last detected rep (left or right)
+                                time_since_last_rep = t_dev - last_peak_t
+
+                                axial_offset = abs(y_smooth)    # what the bar is showing
+                                axial_speed  = abs(yaw_vel_dps) # how fast it's changing
+
+                                # We're interested in situations where:
+                                #  - no rep has been detected for a while,
+                                #  - the bar is clearly off-center but not insane,
+                                #  - and the motion is slow (you're basically in a "middle" pose).
+                                if (
+                                    time_since_last_rep > AUTO_TARE_NO_REP_S and
+                                    AXIAL_AUTO_TARE_MIN_DEG <= axial_offset <= AXIAL_AUTO_TARE_MAX_DEG and
+                                    axial_speed < AUTO_TARE_MAX_VEL_DPS
+                                ):
+                                    # Do the same as manual 'z' tare:
+                                    #   - use current geometric axial angle as new zero
+                                    #   - reset drift integrator
+                                    #   - clear smoothing buffer so the bar snaps instantly
+                                    yaw_rel_bias = axial_geom
+                                    rel_axial_int = 0.0
+                                    yaw_buf = [0.0] * SMOOTH_WINDOW
+
+                                    # Update last_peak_t so we don't immediately re-trigger
+                                    last_peak_t = t_dev
+
+                                    print_event(
+                                        f"[AUTO] Re-centered. Old axial offset was {axial_offset:.1f}° "
+                                        f"after {time_since_last_rep:.1f}s without reps.",
+                                        tone="cyan"
+                                    )
+                                    beep()
+
+
                             # ---- REAL-TIME FEEDBACK LOGIC ----
                             abs_axial = abs(y_smooth)
                             if abs_axial > DIR_MIN_DEG and moving:
@@ -542,7 +596,7 @@ def main():
                                     dir_sign = turn_state_dir
                                     dir_str = "right" if dir_sign > 0 else "left"
                                     target_for_dir = AXIAL_TARGET_RIGHT_DEG if dir_sign > 0 else AXIAL_TARGET_LEFT_DEG
-                                    same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
+                                    same_direction_motion = (yaw_vel_dps * dir_sign) > 0.0 # same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
                                     
                                     msgs = []
                                     if too_fast_now and not warned_speed_this_turn:
@@ -561,7 +615,7 @@ def main():
                                         send_ui_event("HIPS_STILL")
 
                                     if (time_in_turn > DEPTH_WARN_MIN_TIME_S and same_direction_motion and 
-                                        abs_axial < DEPTH_WARN_FRACTION * target_for_dir and not warned_depth_this_turn):
+                                        abs_axial < target_for_dir and not warned_depth_this_turn):
                                         msgs.append(f"Rotate further to the {dir_str}.")
                                         warned_depth_this_turn = True
                                         send_ui_event("ROTATE_FURTHER")
@@ -571,7 +625,8 @@ def main():
                                         print_event(" ".join(msgs), tone="yellow")
                                         turn_state_last_fb_t = t_dev
                             else:
-                                if abs_axial < TURN_END_DEG or not moving:
+                                # Only reset the turn when you actually come back near neutral, not just because you've slowed down.
+                                if abs_axial < TURN_END_DEG:
                                     turn_state_dir = 0
                                     turn_state_start_t = t_dev
                                     turn_state_last_fb_t = -1e9
@@ -659,7 +714,18 @@ def main():
             except: pass
 
         nL, nR = len(peaks_L), len(peaks_R)
+
         print(color(f"\nSession summary: peaks L={nL}, R={nR}", "bold"))
+        
+        if peaks_L:
+            peaks_L_values = [v for _, v in peaks_L]
+            print(f"  Left mean peak:  {np.mean(peaks_L_values):.1f}°")
+        if peaks_R:
+            peaks_R_values = [v for _, v in peaks_R]
+            print(f"  Right mean peak: {np.mean(peaks_R_values):.1f}°")
+        if peaks_L and peaks_R:
+            print(f"  Asymmetry (R-L): {np.mean(peaks_R_values) - np.mean(peaks_L_values):+.1f}°")
+
         print("Done.")
 
 if __name__ == "__main__":
