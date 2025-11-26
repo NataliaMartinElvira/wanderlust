@@ -68,6 +68,7 @@ class ArduinoIMUReader:
 
         try:
             line_bytes = self.serial_connection.readline() 
+            #print(f"[IMU RAW] {line_bytes}", flush=True)
             if not line_bytes: return None 
                 
             line = line_bytes.decode('utf-8', errors='replace').strip()
@@ -97,7 +98,7 @@ class ArduinoIMUReader:
             float_values = [float(p.strip()) for p in parts]
             
             # --- Structure Data based on Type ---
-            
+            #print(f"[IMU PARSED] V{packet_type} Data: {float_values}", flush=True)
             if packet_type == 1:
                 # V1: Single IMU (Pierna)
                 return { LEG_ID: self._parse_imu_data(float_values, 0) }
@@ -109,7 +110,7 @@ class ArduinoIMUReader:
                     UPPER_ID: self._parse_imu_data(float_values, 0),    # Indices 0 to 8
                     PELVIS_ID: self._parse_imu_data(float_values, 9)   # Indices 9 to 17
                 }
-            
+            print(f"[IMU PARSED] Unhandled packet type. Line: {line}", flush=True)
         except ValueError:
             # print(f"[IMU PARSE ERROR] Failed to convert data to float. Line: {line}")
             return None
