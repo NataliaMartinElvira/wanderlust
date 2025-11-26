@@ -5,18 +5,14 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-# ==========================================
-# 1. CONFIGURACIÓN
-# ==========================================
 SERIAL_PORT = 'COM7'
 BAUD_RATE = 115200
 
-# --- DIMENSIONES REALES DEL OBSTÁCULO ---
+#Biomechanical threslholds and parameters
 OBSTACLE_HEIGHT_CM = 6.0
 OBSTACLE_DEPTH_CM  = 6.0
 SAFETY_MARGIN_CM   = 5.0
-
-# --- FILTROS TÉCNICOS ---
+#parameters for movement detection
 GYRO_START_THR_DPS = 15.0
 GYRO_STOP_THR_DPS  = 5.0
 MAX_STEP_DURATION_S = 4.0
@@ -34,19 +30,19 @@ LEN_V1 = 9
 def now_ts():
     return dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# =========================
-# 2. LÓGICA BIOMECÁNICA MEJORADA
-# =========================
+#Biomechanic logic
 
 class SensorCalibrator:
     def __init__(self):
         self.samples = []
+        #default gravity vector (z-axis) if calibration fails
         self.gravity_vector = np.array([0.0, 0.0, 1.0])
 
     def add_sample(self, row):
         self.samples.append(row)
 
     def calculate(self):
+        #Computes the mean acceleration vector during period without movement
         if not self.samples:
             return False
         df = pd.DataFrame(self.samples)
@@ -58,12 +54,15 @@ class SensorCalibrator:
         return True
 
     def get_dynamic_force(self, ax, ay, az):
+        #Estimates dynamic acceleration by subtracting the static gravity vector
+        #Substract the static gravity vector
         current = np.array([ax, ay, az])
         dynamic = current - self.gravity_vector
         return np.linalg.norm(dynamic)
 
 
 class ObstacleStepAnalyzer:
+    #Implementation of State Machine to detct and evaluate stepping movements
     def __init__(self, calibrator):
         self.calib = calibrator
         self.state = "IDLE"
@@ -76,26 +75,27 @@ class ObstacleStepAnalyzer:
         self.feedback = {}
 
     def process_sample(self, row):
-        # giroscopio corregido (**2)
+    #returns to evaluation if a step is finished
         gyr_mag = np.sqrt(
             row['gyr_x_dps']**2 +
             row['gyr_y_dps']**2 +
             row['gyr_z_dps']**2
         )
-
+#calculate dynamic acceleration
         acc_dyn = self.calib.get_dynamic_force(
             row['acc_x_g'], row['acc_y_g'], row['acc_z_g']
         )
 
         current_time = time.time()
-
+#different states 
         if self.state == "IDLE":
+            #transition condition: angular velocity exceeds threshold
             if gyr_mag > GYRO_START_THR_DPS:
                 self.state = "MOVING"
                 self.buffer = []
                 self.start_time = current_time
 
-        elif self.state == "MOVING":
+        elif self.state == "MOVING": #start recording data for step analysis
             self.buffer.append({
                 'g_mag': gyr_mag,
                 'a_dyn': acc_dyn,
@@ -105,12 +105,12 @@ class ObstacleStepAnalyzer:
             })
 
             duration = current_time - self.start_time
-
+#motion stops: minimum duration check
             if gyr_mag < GYRO_STOP_THR_DPS and duration > 0.2:
                 res = self._evaluate_quality(duration)
                 self.state = "IDLE"
                 return res
-
+#timeout (prevent 
             if duration > MAX_STEP_DURATION_S:
                 self.state = "IDLE"
 
@@ -125,22 +125,19 @@ class ObstacleStepAnalyzer:
         if duration < 0.6:
             return None
 
-        # ======================================
-        # NUEVA LÓGICA BIOMECÁNICA ROBUSTA
-        # ======================================
 
-        # Señal real de levantamiento del pie
+        #Signal for feet lifting
         df["acc_mag"] = np.sqrt(df["ax"]**2 + df["ay"]**2 + df["az"]**2)
         lift_signal = df["acc_mag"].max() - df["acc_mag"].min()
 
         avg_force = df['a_dyn'].mean()
         total_rotation = df['g_mag'].sum() * 0.02
 
-        # Requisito de levantamiento (altura)
+        # height metric 
         req_lift = 0.08 + (self.target_height * 0.01)
         passed_height = lift_signal >= req_lift
 
-        # Amplitud SOLO si hubo altura
+        # amplitude
         if passed_height:
             req_rotation = 15.0 + (self.target_depth * 0.6)
             passed_amplitude = total_rotation >= req_rotation
@@ -159,7 +156,7 @@ class ObstacleStepAnalyzer:
             }
         }
 
-        # ----------- SALIDA POR CONSOLA -----------
+        # console output
         print("\n" + "="*40)
         print(f"Step analysis (Duration: {duration:.2f}s)")
 
@@ -177,9 +174,7 @@ class ObstacleStepAnalyzer:
         return self.feedback
 
 
-# =========================
 # 3. MAIN (SERIAL)
-# =========================
 
 def setup_serial():
     print(f"Conected to {SERIAL_PORT}...")
