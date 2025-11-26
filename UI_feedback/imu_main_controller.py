@@ -7,9 +7,8 @@ import sys
 
 # --- COMMUNICATION CONFIGURATION WITH UNITY ---
 UNITY_IP = '127.0.0.1'
-UNITY_FEEDBACK_PORT = 5001     # Python SENDS FEEDBACK here
-PYTHON_COMMAND_PORT = 5004     # Python RECEIVES COMMANDS here
-FEEDBACK_INTERVAL_SECONDS = 0.01 
+UNITY_FEEDBACK_PORT = 5001     # Python SENDS FEEDBACK here (Client)
+PYTHON_COMMAND_PORT = 5004     # Python RECEIVES COMMANDS here (Server)
 
 # --- GLOBAL STATE ---
 GLOBAL_STATE = {
@@ -40,7 +39,7 @@ LOGIC_MAP = {
 # --- TCP CLIENT (SENDER) ---
 
 class TcpClientThread(threading.Thread):
-    """ Handles connection and sending of feedback (FEEDBACK:BAD, CALIB:DONE) to Unity. """
+    """ Handles connection and sending of feedback to Unity (Python is Client). """
     def __init__(self, ip, port, state):
         threading.Thread.__init__(self)
         self.ip = ip
@@ -66,13 +65,11 @@ class TcpClientThread(threading.Thread):
                     message = tcp_send_queue.get()
                     if message:
                         self.socket.sendall(message.encode('utf-8'))
-                        # Debugging: print(f"[TCP SENT] -> {message.strip()}")
                 
                 time.sleep(0.01)
 
             except socket.error as e:
-                # Expected when Unity closes the server
-                if e.errno == 32: # Broken pipe
+                if e.errno == 32: 
                     print("[TCP CLIENT ERROR] Socket error: Broken pipe. Disconnected.")
                 else:
                     print(f"[TCP CLIENT ERROR] Socket error: {e}. Disconnected.")
@@ -86,7 +83,7 @@ class TcpClientThread(threading.Thread):
 # --- TCP SERVER (RECEIVER) ---
 
 class TcpListenerThread(threading.Thread):
-    """ Handles listening for state commands sent FROM Unity (Python is the Server). """
+    """ Handles listening for state commands sent FROM Unity (Python is Server). """
     def __init__(self, ip, port, state):
         threading.Thread.__init__(self)
         self.ip = ip
@@ -133,9 +130,7 @@ class TcpListenerThread(threading.Thread):
         if cmd_type == 'SET_EXERCISE' and len(parts) > 1:
             exercise = parts[1].strip().upper()
             if exercise in LOGIC_MAP:
-                # When receiving SET_EXERCISE, always reset current state
                 GLOBAL_STATE['current_exercise'] = exercise
-                # Send explicit reset to trigger the clearing of the step counter on the next loop
                 tcp_send_queue.put("RESET_STEP_COUNTER\n") 
                 print(f"[TCP SERVER] State change received: SET_EXERCISE to {exercise}")
             else:
@@ -163,7 +158,6 @@ def main_loop():
     """ 
     Main program loop that reads IMUs and applies exercise logic based on Unity state.
     """
-    # Assuming this module exists and works.
     try:
         from arduino_imu_reader import ArduinoIMUReader 
     except ImportError:
@@ -174,14 +168,13 @@ def main_loop():
     imu_reader = ArduinoIMUReader(port='/dev/tty.usbserial-58550220231', baudrate=115200) 
     imu_reader.connect_imus()
     
-    # 2. START TCP THREADS (Client for sending to 5001, Server for receiving on 5004)
+    # 2. START TCP THREADS 
     tcp_send_thread = TcpClientThread(UNITY_IP, UNITY_FEEDBACK_PORT, GLOBAL_STATE)
     tcp_listen_thread = TcpListenerThread(UNITY_IP, PYTHON_COMMAND_PORT, GLOBAL_STATE)
     
     tcp_send_thread.start()
     tcp_listen_thread.start()
 
-    # Wait until the sending connection is established
     while not tcp_send_thread.is_connected and not GLOBAL_STATE['stop_threads']:
         time.sleep(0.5)
 
@@ -192,7 +185,6 @@ def main_loop():
     # 3. LOGIC INSTANCE MANAGEMENT
     current_logic_key = 'NONE'
     
-    # Add imu_main_controller to sys.modules so the logic file can find GLOBAL_STATE
     sys.modules['imu_main_controller'] = sys.modules[__name__]
 
     current_logic = LOGIC_MAP[current_logic_key]() 
@@ -202,7 +194,7 @@ def main_loop():
     # --- CONTROL AND EXECUTION LOOP ---
     while not GLOBAL_STATE['stop_threads']:
         
-        # Check if the required logic module has changed (received via TcpListenerThread)
+        # Check if the required logic module has changed
         if GLOBAL_STATE['current_exercise'] != current_logic_key:
             current_logic_key = GLOBAL_STATE['current_exercise']
             current_logic = LOGIC_MAP.get(current_logic_key, LOGIC_MAP['NONE'])()
@@ -223,7 +215,7 @@ def main_loop():
             time.sleep(0.005)
             continue
 
-        # 3.3. ACTIVE EXERCISE PHASE (CALIBRATION or EXERCISE)
+        # 3.3. ACTIVE EXERCISE PHASE
         
         # A) Explicit CALIBRATION handling (REMOVED BRANCH FOR CALIBRATION)
         # NOTE: If Unity sends START_CALIBRATION, the state changes to 'CALIBRATION'
@@ -237,10 +229,8 @@ def main_loop():
         # B) PERFORMANCE ANALYSIS (Only for exercise states)
         if GLOBAL_STATE['current_exercise'] in ACTIVE_EXERCISES:
             
-            # CRITICAL CALL TO ANALYZE_PERFORMANCE
             feedback_result = current_logic.analyze_performance(raw_data)
             
-            # b) Send command to Unity ONLY if an event happened
             if feedback_result is not None:
                 
                 feedback_is_bad = feedback_result
