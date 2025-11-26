@@ -7,9 +7,7 @@ import pandas as pd
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
-# =========================
-# CONFIG
-# =========================
+
 HOST = "192.168.4.1"
 PORT = 3333
 
@@ -36,23 +34,20 @@ MAX_STEP_RATE_SPM = 35   # seated marching typical max total cadence
 MIN_STEP_S = 1.0         # min time between same-leg steps (s)
 MAX_STEP_S = 4.0         # max time (allow pauses)
 
-# Single-IMU-on-one-leg → estimate bilateral cadence by ×2
+# Single-IMU estimate bilateral cadence 
 SINGLE_IMU_ONE_LEG = True
 BILATERAL_FACTOR = 2.0
 
-# === Coaching thresholds (only for flags/feedback) ===
-COACH_MIN_AMP_G = 0.03   # now the ONLY amplitude threshold (feedback only)
-COACH_MIN_SPM   = 8.0    # total steps/min below → too_slow=True
-COACH_MAX_SPM   = 20.0   # total steps/min above → too_fast=True
+# thresholds (only for flags/feedback)
+COACH_MIN_AMP_G = 0.03   # (feedback only)
+COACH_MIN_SPM   = 8.0    # total steps/min below too_slow=True
+COACH_MAX_SPM   = 20.0   # total steps/min above too_fast=True
 
 
 def now_ts():
     return dt.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-
-# =========================
-# SIGNAL UTILITIES
-# =========================
+#bandapass filter to eliminate noise
 def bandpass_vm(ax, ay, az, fs=FS, low=LOW, high=HIGH, order=ORDER):
     # Vector magnitude, mean-centered
     vm = np.sqrt(ax*ax + ay*ay + az*az)
@@ -64,7 +59,7 @@ def bandpass_vm(ax, ay, az, fs=FS, low=LOW, high=HIGH, order=ORDER):
 
 
 def detect_candidate_peaks(signal, fs=FS, min_height=VM_PEAK_THR_G, min_distance_s=0.1):
-    """Find positive local maxima above a low threshold."""
+    #Find positive local maxima above a low threshold.
     min_distance = int(min_distance_s * fs)
     peaks, last_i = [], -10**9
     for i in range(1, len(signal)-1):
@@ -75,7 +70,7 @@ def detect_candidate_peaks(signal, fs=FS, min_height=VM_PEAK_THR_G, min_distance
 
 
 def merge_step_peaks(peaks, signal, fs=FS, max_step_rate_spm=MAX_STEP_RATE_SPM):
-    """Group very-close peaks (same-step double-peak) and keep the tallest."""
+    #Group very-close peaks (same-step double-peak) and keep the tallest
     if len(peaks) == 0:
         return peaks
     min_step_period = 60.0 / max_step_rate_spm       # s per step (total)
@@ -95,10 +90,10 @@ def merge_step_peaks(peaks, signal, fs=FS, max_step_rate_spm=MAX_STEP_RATE_SPM):
 
 
 def filter_steps_by_timing(peaks, fs=FS, min_step_s=MIN_STEP_S, max_step_s=MAX_STEP_S):
-    """
-    Keep steps based on reasonable timing ONLY.
-    No amplitude rejection here (so even tiny steps survive to get feedback).
-    """
+
+    #Keep steps based on reasonable timing ONLY.
+    #No amplitude rejection here (so even tiny steps survive to get feedback).
+    
     if len(peaks) == 0:
         return peaks
     valid, last_t = [], None
@@ -136,15 +131,9 @@ def periodicity_score(signal, fs=FS, min_p=0.4, max_p=2.0):
     return float(np.max(ac[Lmin:Lmax]))
 
 
-# =========================
-# METRICS & REPS TABLE (boolean flags)
-# =========================
+#metric table
 def compute_metrics(raw_df):
-    """
-    Returns:
-      reps_df columns: t_ms, amp_g, spm_est, amp_low, too_slow, too_fast, good_rep
-      and a summary dict.
-    """
+    #Returns:reps_df columns: t_ms, amp_g, spm_est, amp_low, too_slow, too_fast, good_repand a summary dict.
     # Empty guard
     if raw_df.empty:
         reps_df = pd.DataFrame(columns=[
@@ -156,7 +145,7 @@ def compute_metrics(raw_df):
         }
         return reps_df, metrics
 
-    # Extract numeric arrays robustly
+    # Extract numeric arrays
     t  = pd.to_numeric(raw_df["time_ms"],  errors="coerce").values.astype(float)
     ax = pd.to_numeric(raw_df["acc_x_g"],  errors="coerce").values.astype(float)
     ay = pd.to_numeric(raw_df["acc_y_g"],  errors="coerce").values.astype(float)
@@ -238,9 +227,6 @@ def save_excel(out_path, raw_df):
     return len(reps_df), m, reps_df
 
 
-# =========================
-# TCP & MAIN
-# =========================
 def connect():
     while True:
         try:
