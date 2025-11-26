@@ -5,9 +5,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h" 
 //sender1
-// ------------------------------------------------------------
+
 // CUSTOM SETTINGS
-// ------------------------------------------------------------
+
 #define NODE_ID 1  // This is Board 1
 
 // Receiver MAC address (MUST MATCH YOUR RECEIVER BOARD)
@@ -17,9 +17,9 @@ uint8_t broadcastAddress[] = {0x10, 0x06, 0x1C, 0x18, 0x69, 0x00};
 #define I2C_SDA_PIN 22
 #define I2C_SCL_PIN 20
 
-// ------------------------------------------------------------
+
 // V1 DATA STRUCTURE (Small Packet for 1 IMU)
-// ------------------------------------------------------------
+
 typedef struct struct_message_v1 {
     int id; 
     unsigned long timestamp;
@@ -34,19 +34,19 @@ struct_message_v1 myData;
 #define ICM20948_ADDR 0x68
 ICM20948_WE myIMU = ICM20948_WE(ICM20948_ADDR);
 
-// ------------------------------------------------------------
+
 // ESP-NOW SEND CALLBACK
-// ------------------------------------------------------------
+
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-    // Optional: Print status only if it fails to avoid console spam
+    
     if (status != ESP_NOW_SEND_SUCCESS) {
         // Serial.println("ESP-NOW send error"); 
     }
 }
 
-// ------------------------------------------------------------
+
 // IMU TASK (Runs on Core 1)
-// ------------------------------------------------------------
+
 void imu_task(void *pvParameters) {
 
     Serial.println("[CORE 1] Initializing I2C...");
@@ -68,7 +68,7 @@ void imu_task(void *pvParameters) {
         // 1. Read Sensor
         myIMU.readSensor();
 
-        // 2. Get Data (Using Correct Pointer Syntax)
+        // 2. Get Data 
         xyzFloat acc;
         myIMU.getGValues(&acc); 
 
@@ -94,10 +94,10 @@ void imu_task(void *pvParameters) {
         myData.gyr_z = gyr.z;
 
         // 4. Send Data
-        // The Receiver will detect this is a "Small Packet" and treat it as V1
+        
         esp_now_send(broadcastAddress, (uint8_t*)&myData, sizeof(myData));
 
-        // Optional: Print Pitch for local debugging
+        
         static unsigned long lastPrint = 0;
         if (millis() - lastPrint > 200) {
              Serial.print("V1 Sending | Pitch: ");
