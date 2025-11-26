@@ -11,9 +11,9 @@ import os
 
 # MAKE SURE THIS NAME MATCHES YOUR FILE EXACTLY
 PARTICIPANT_FILES = [
-    "imu_seated_march_20251124_201439.xlsx",
-    "imu_seated_march_20251125_181500.xlsx",
-    "imu_seated_march_20251124_203520.xlsx"
+    "imu_seated_march_20251124_205245.xlsx",
+    "imu_seated_march_20251124_204224.xlsx",
+    "imu_seated_march_20251124_202933.xlsx"
 
 ]
 
@@ -60,7 +60,7 @@ def analyze_robustness():
     df = load_and_process_data()
     
     if df.empty:
-        print("\n❌ ANALYSIS CANNOT BE COMPLETED: No data loaded.")
+        print("\n ANALYSIS CANNOT BE COMPLETED: No data loaded.")
         return
 
     y_true = df['actual_label']
@@ -140,8 +140,8 @@ def analyze_robustness():
 
     plt.tight_layout()
 
-    plt.savefig("robustness_plot.png", dpi=300)
-    print(">> Plot saved as: robustness_plot.png")
+    plt.savefig("robustness_walinking_place_plot.png", dpi=300)
+    print(">> Plot saved as: robustness_walinking_place_plot.png")
 
     plt.show()
 
