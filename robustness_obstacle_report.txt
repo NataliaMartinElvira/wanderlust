@@ -1,0 +1,752 @@
+
+==================================================
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+ ROBUSTNESS REPORT - OBSTACLE CROSSING
+=
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+Total Samples: 61
+ > Actual GOOD (Target: 10/file): 30
+ > Actual BAD  (Target: 10/file): 31
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ACCURACY:      96.72%
+SENSITIVITY:   96.67% (Detecting Good Steps)
+SPECIFICITY:   96.77% (Detecting Bad Steps)
+-
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
+ > True Positives:  29
+ > True Negatives:  30
+ > False Positives: 1 (Safety Risk: Bad step marked Good)
+ > False Negatives: 1 (Frustration: Good step marked Bad)
+=
