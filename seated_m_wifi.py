@@ -10,7 +10,7 @@ from scipy.signal import butter, sosfiltfilt
 # =========================
 # CONFIG
 # =========================
-SERIAL_PORT = '/dev/tty.usbserial-59690891081'      # <--- VERIFY YOUR PORT
+SERIAL_PORT = '/dev/tty.usbserial-58550220231'      # <--- VERIFY YOUR PORT
 BAUD_RATE = 115200
 
 # PARSING CONFIG
@@ -279,6 +279,7 @@ def main():
                             raw_df = pd.concat([df_exist, df_new], ignore_index=True)
                         else:
                             raw_df = df_new
+                        
 
                         reps_count, m, reps_df = save_excel(out_path, raw_df)
                         rows.clear()
@@ -307,7 +308,7 @@ def main():
                             f"rhythm_SD={m['ipi_sd_s']:.2f} s | periodicity={m['periodicity']:.2f}    ",
                             end=''
                         )
-
+                        
     except KeyboardInterrupt:
         print("\nStopping...")
         s.close()
@@ -324,7 +325,7 @@ def main():
                     raw = pd.concat([old, df_new])
                 except: raw = df_new
             else: raw = df_new
-            save_excel(out_path, raw)
+            #save_excel(out_path, raw)
             print("\nFinal Excel file saved to:", out_path)
 
 if __name__ == "__main__":

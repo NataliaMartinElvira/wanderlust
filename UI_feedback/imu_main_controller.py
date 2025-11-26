@@ -167,7 +167,7 @@ def main_loop():
     from arduino_imu_reader import ArduinoIMUReader 
     
     # 1. INITIALIZE ARDUINO/IMU
-    imu_reader = ArduinoIMUReader(port='/dev/tty.usbserial-59690891081', baudrate=115200) 
+    imu_reader = ArduinoIMUReader(port='/dev/tty.usbserial-58550220231', baudrate=115200) 
     imu_reader.connect_imus()
     
     # 2. START TCP THREADS (Client for sending to 5001, Server for receiving on 5004)
