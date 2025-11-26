@@ -1,0 +1,752 @@
+
+==================================================
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+ AUTOMATIC ROBUSTNESS REPORT
+=
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+Total Samples: 57
+ > True GOOD (First 10): 30
+ > True BAD  (Remaining): 27
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ACCURACY:      91.23%
+SENSITIVITY:   100.00%
+SPECIFICITY:   81.48%
+-
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=
+ > True Positives:  30
+ > True Negatives:  22
+ > False Positives: 5
+ > False Negatives: 0
+=

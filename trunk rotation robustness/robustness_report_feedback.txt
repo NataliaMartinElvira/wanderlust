@@ -1,0 +1,34 @@
+======================================================================
+ REP DETECTION (rep present vs rep missed)
+======================================================================
+Total reps (good + bad): 75
+Detected reps (TP):      64
+Missed reps   (FN):      11
+----------------------------------------------------------------------
+Detection accuracy (TP / all reps): 85.33%
+Sensitivity (same as above here):   85.33%
+Specificity: N/A (no true negatives / no 'no-rep' tests)
+Confusion matrix (rows=true, cols=pred):
+  [[TN, FP],
+   [FN, TP]] =
+  [[0, 0],
+   [11, 64]]
+
+======================================================================
+ FEEDBACK TYPE (only for detected reps)
+======================================================================
+Number of detected reps: 64
+Feedback accuracy on detected reps: 79.69%
+Per-class sensitivity & specificity (detected reps):
+  none  -> Sensitivity: 68.00%, Specificity: 87.18%
+  hips  -> Sensitivity: 92.31%, Specificity: 86.27%
+  trunk -> Sensitivity: 76.92%, Specificity: 100.00%
+  rotate -> Sensitivity: 92.31%, Specificity: 98.04%
+
+======================================================================
+ OVERALL FEEDBACK APPROPRIATENESS
+======================================================================
+Good reps: correct if feedback is 'none'.
+Bad reps & detected: correct if feedback matches the error type.
+Bad reps & NOT detected: correct if feedback is 'none' OR the error type.
+Overall proportion of reps with appropriate feedback: 80.00%

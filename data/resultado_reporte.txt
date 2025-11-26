@@ -1,0 +1,752 @@
+
+==================================================
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+ REPORTE DE ROBUSTEZ - GENERADO AUTOMÁTICAMENTE
+=
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+Total Muestras: 19
+ > Reales BUENAS (1ras 10): 10
+ > Reales MALAS  (Resto):   9
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ACCURACY (Precisión Global): 89.47%
+SENSITIVITY (Detectar Buenos): 100.00%
+SPECIFICITY (Detectar Malos):  77.78%
+-
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
+ > True Positives (Buenos detectados bien): 10
+ > True Negatives (Malos detectados bien):  7
+ > False Positives (Era MALO y dijo Bueno): 2
+ > False Negatives (Era BUENO y dijo Malo): 0
+=
