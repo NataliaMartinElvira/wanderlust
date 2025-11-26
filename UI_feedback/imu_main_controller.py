@@ -69,7 +69,7 @@ class TcpClientThread(threading.Thread):
                 time.sleep(0.01)
 
             except socket.error as e:
-                if e.errno == 32: # Broken pipe
+                if e.errno == 32: 
                     print("[TCP CLIENT ERROR] Socket error: Broken pipe. Disconnected.")
                 else:
                     print(f"[TCP CLIENT ERROR] Socket error: {e}. Disconnected.")
@@ -183,12 +183,9 @@ def main_loop():
     # 3. LOGIC INSTANCE MANAGEMENT
     current_logic_key = 'NONE'
     
-    # CRITICAL: Add imu_main_controller to sys.modules for dynamic access from logic files
     sys.modules['imu_main_controller'] = sys.modules[__name__]
 
     current_logic = LOGIC_MAP[current_logic_key]() 
-    
-    # NOTE: We rely on Unity to manage audio priority. No global feedback cooldown needed here.
     
     print("\n--- MAIN LOOP STARTED ---")
 
@@ -217,7 +214,7 @@ def main_loop():
 
         # 3.3. ACTIVE EXERCISE PHASE
         
-        # A) Explicit CALIBRATION handling
+        # A) Explicit CALIBRATION handling (Calls check_calmness repeatedly)
         if GLOBAL_STATE['current_exercise'] == 'CALIBRATION':
             current_logic.check_calmness(raw_data) 
             time.sleep(0.005)
@@ -226,30 +223,19 @@ def main_loop():
         # B) PERFORMANCE ANALYSIS (Only for exercise states)
         if GLOBAL_STATE['current_exercise'] in ACTIVE_EXERCISES:
             
-            # analyze_performance handles its own rate limiting (Trunk Rotation) 
-            # OR relies on the event-based detection (Seated March)
             feedback_result = current_logic.analyze_performance(raw_data)
             
-            # b) Send command to Unity ONLY if an event happened
             if feedback_result is not None:
                 
                 feedback_is_bad = feedback_result
                 
-                # NOTE: For SEATED_MARCH, we rely on the internal logic to rate-limit GOOD
-                # For TRUNK_ROTATION, the logic sends the command directly via _send_feedback.
-                # Here, we only handle the *event* coming from SEATED_MARCH (True/False/None return).
-                
                 if current_logic_key == 'TRUNK_ROTATION':
                     # TRUNK_ROTATION logic handles its own sending via _send_feedback.
-                    # We only return the result here, but the send has already happened inside analyze_performance.
-                    # This branch is for completeness/future logging only.
                     pass 
                 
                 else: # SEATED/STANDING MARCH
-                    # Simplified sending logic for marching events
                     if feedback_is_bad:
                         send_to_unity("FEEDBACK:BAD") 
-                        # We don't track last_feedback_good here, relying on Unity's audio lock
                     else:
                         send_to_unity("FEEDBACK:GOOD") 
         

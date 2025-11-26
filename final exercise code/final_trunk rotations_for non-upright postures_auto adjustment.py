@@ -1,6 +1,5 @@
 # seated_trunk_rotation_axial_realtime_turnstate_unity_tcp_fixed.py
 # ADAPTED FOR SERIAL V2_ACCEL (2 IMUS IN 1 PACKET)
-import msvcrt
 
 import serial # <--- Switched from socket
 import time
@@ -14,7 +13,7 @@ import socket # Keep socket for Unity TCP
 # =========================
 # CONFIGURATION
 # =========================
-SERIAL_PORT = 'COM8'      # <--- CHECK YOUR PORT
+SERIAL_PORT = '/dev/tty.usbserial-58550220231'
 BAUD_RATE = 115200
 
 # Packet Config for V2_ACCEL
@@ -210,9 +209,12 @@ def main():
     connect_ui_socket()
 
     # Connect to Serial Port
-    print(f"Connecting to {SERIAL_PORT} at {BAUD_RATE}...")
+    # --- IMPORTANT: CHANGE SERIAL_PORT HERE ---
+    current_port = SERIAL_PORT
+    print(f"Connecting to {current_port} at {BAUD_RATE}...")
+    # -------------------------------------------
     try:
-        s_serial = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+        s_serial = serial.Serial(current_port, BAUD_RATE, timeout=1)
         print("Connected to Serial.\n")
         send_ui_event("IMU_CONNECTED")
     except Exception as e:
@@ -596,7 +598,7 @@ def main():
                                     dir_sign = turn_state_dir
                                     dir_str = "right" if dir_sign > 0 else "left"
                                     target_for_dir = AXIAL_TARGET_RIGHT_DEG if dir_sign > 0 else AXIAL_TARGET_LEFT_DEG
-                                    same_direction_motion = (yaw_vel_dps * dir_sign) > 0.0 # same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
+                                    same_direction_motion = (yaw_vel_dps * dir_sign) > 0.0 
                                     
                                     msgs = []
                                     if too_fast_now and not warned_speed_this_turn:
@@ -682,19 +684,6 @@ def main():
                             if zone_neg and y_smooth > exit_neg: zone_neg = False
 
                             render(y_smooth, yaw_vel_dps, y_pel_dev)
-                            # NEW: Press 'z' to Re-Center (Tare)
-                            if msvcrt.kbhit():
-                                key = msvcrt.getch().decode('utf-8').lower()
-                                if key == 'z':
-                                    # Set the current raw angle as the new 'Zero'
-                                    yaw_rel_bias = axial_geom
-                                    # Reset the drift integrator so it doesn't fzight the new zero
-                                    rel_axial_int = 0.0 
-                                    # Also reset the 'smooth' buffer so the bar snaps instantly
-                                    yaw_buf = [0.0] * SMOOTH_WINDOW
-                                    
-                                    print_event(f"!!! RE-CENTERED !!! New Bias: {yaw_rel_bias:.1f}", tone="cyan")
-                                    beep()
 
                         except ValueError:
                             pass

@@ -9,7 +9,7 @@ from datetime import datetime
 import importlib
 
 # --- CONFIG ---
-SAMPLE_HZ               = 50.0 # Assuming 50 Hz from other components
+SAMPLE_HZ               = 50.0 
 CALIBRATION_SECONDS     = 3.0   
 AXIAL_TARGET_RIGHT_DEG  = 15.0   
 AXIAL_TARGET_LEFT_DEG   = 15.0   
@@ -23,21 +23,17 @@ MIN_REP_GAP_S           = 0.5
 SMOOTH_WINDOW           = 5
 SMOOTH_POLY             = 2
 
-# Stream channel IDs (MUST match ImuDataHandler and ArduinoIMUReader)
 UPPER_ID  = "IMU_CH3"
 PELVIS_ID = "IMU_CH0"
 
-# Stillness gating (Zero-G based, assuming IMU is moving)
 STILL_GYR_DPS           = 2.5
 G_1G                    = 1.0 
 ACC_STILL_TOL_G         = 0.1 
 
-# Relative-gyro fusion settings
 REL_LEAK_TAU_STILL_S    = 6.0    
 REL_MIN_DT_FRAC         = 0.4    
 REL_MAX_INT_OFFSET_DEG  = 25.0   
 
-# Real-time per-turn feedback settings
 DIR_MIN_DEG                 = 5.0   
 TURN_END_DEG                = 3.0   
 TURN_FEEDBACK_INTERVAL_S    = 0.4   
@@ -78,12 +74,6 @@ def quat_to_R(q):
         [2*(x*z - y*w), 2*(y*z + x*w), 1-2*(x*x+y*y)],
     ])
 
-def is_still(gyr_rad_s, acc_g):
-    """Stillness test: low gyro magnitude + accel magnitude ~1g (for calib)."""
-    gyr_dps = np.degrees(np.linalg.norm(gyr_rad_s))
-    acc_mag = np.linalg.norm(acc_g)
-    return (gyr_dps < STILL_GYR_DPS) and (abs(acc_mag - G_1G) <= ACC_STILL_TOL_G)
-
 def angle_wrap_deg(a):
     """Wrap angle to [-180, 180) degrees."""
     return ((a + 180.0) % 360.0) - 180.0
@@ -102,12 +92,10 @@ def axial_angle_about_axis(q_rel, axis_world):
     theta = 2.0 * np.degrees(np.arcsin(v_par))
     return angle_wrap_deg(theta)
 
-# Helper for sending events through the main controller's queue
 def _send_feedback(is_bad):
     """ Helper to safely put commands into the sending queue of the main controller. """
     command = "FEEDBACK:BAD" if is_bad else "FEEDBACK:GOOD"
     try:
-        # We must call the send_to_unity function from the main controller module
         __import__('imu_main_controller').send_to_unity(command)
     except Exception as e:
         print(f"[INTERNAL SEND ERROR] Could not send {command}. {e}")
@@ -143,7 +131,7 @@ class TrunkRotationLogic:
         self.gyr_u_cal = []
         self.gyr_p_cal = []
 
-        # --- NEW: Calibration state flags ---
+        # --- Calibration state flags ---
         self.calibration_started = False
         self.calibration_finished = False
         self.calib_start_time = 0.0
@@ -154,18 +142,11 @@ class TrunkRotationLogic:
         self.wall_prev = time.perf_counter()
 
         # Turn state for real-time feedback
-        self.turn_state_dir = 0          # 0 = none, +1 right, -1 left
+        self.turn_state_dir = 0          
         self.turn_state_last_fb_t = -1e9
         
         # Per-turn warning flags
-        self.warned_speed_this_turn  = False
-        self.warned_bend_this_turn   = False
-        self.warned_pelvis_this_turn = False
         self.warned_depth_this_turn  = False
-        
-        # Hysteretic states (simplified to raw boolean check for immediate feedback)
-        self.bending_state = False
-        self.pelvis_state  = False
         
         print("[Logic] Trunk Rotation logic loaded. (Dual IMU State Machine)")
 
@@ -179,34 +160,29 @@ class TrunkRotationLogic:
         if not self.calibration_started:
             self.calib_start_time = time.perf_counter()
             self.calibration_started = True
+            self.calibration_finished = False 
             print(f"[CALIB START] Calibration collection initiated at {self.calib_start_time}.")
             
-        # Assuming the reader provides gyros in dps
+        # Data extraction and filter update
         acc_u = np.array([raw_data_dict[UPPER_ID]['accel_x'], raw_data_dict[UPPER_ID]['accel_y'], raw_data_dict[UPPER_ID]['accel_z']])
         gyr_u = np.radians(np.array([raw_data_dict[UPPER_ID]['gyr_x'], raw_data_dict[UPPER_ID]['gyr_y'], raw_data_dict[UPPER_ID]['gyr_z']]))
         acc_p = np.array([raw_data_dict[PELVIS_ID]['accel_x'], raw_data_dict[PELVIS_ID]['accel_y'], raw_data_dict[PELVIS_ID]['accel_z']])
         gyr_p = np.radians(np.array([raw_data_dict[PELVIS_ID]['gyr_x'], raw_data_dict[PELVIS_ID]['gyr_y'], raw_data_dict[PELVIS_ID]['gyr_z']]))
         
-        # ---- Run Filter Update (Simplified for calibration phase) ----
+        # Run Filter Update 
         self.q_u = self.f_upper.updateIMU(gyr=gyr_u, acc=acc_u, q=self.q_u)
         self.q_p = self.f_pel.updateIMU(gyr=gyr_p, acc=acc_p, q=self.q_p)
         
-        # Rotation matrices
+        # Rotation matrices and angles
         Rp = quat_to_R(self.q_p)
-
-        # Relative orientation
         q_rel = quat_mul(self.q_u, quat_conj(self.q_p))
         r_rel, p_rel, _ = euler_zyx(q_rel)
         _, _, yaw_p = euler_zyx(self.q_p)
-
-        # Joint axis definition (pelvis IMU +X transformed to world)
         spine_axis_body = np.array([1.0, 0.0, 0.0])
         spine_axis_world = Rp @ spine_axis_body
-
-        # Geometric axial angle
         axial_geom = axial_angle_about_axis(q_rel, spine_axis_world)
 
-        # Collect data for calibration biases 
+        # Collect data
         self.calib_coll_rel.append(axial_geom)
         self.calib_coll_pel.append(yaw_p)
         self.calib_coll_p_rel.append(p_rel)
@@ -225,8 +201,8 @@ class TrunkRotationLogic:
     def _finalize_calibration(self):
         """ Calculates and stores the final biases after the fixed calibration time. """
         
-        if not self.calib_coll_rel:
-            print("[CALIB ERROR] No data collected during calibration window.")
+        if len(self.calib_coll_rel) < 10: 
+            print(f"[CALIB ERROR] Not enough data collected ({len(self.calib_coll_rel)} frames).")
             return
 
         self.yaw_rel_bias = float(np.median(self.calib_coll_rel))
@@ -247,7 +223,7 @@ class TrunkRotationLogic:
         
         print(f"[CALIB SUCCESS] Finalized biases: Axial {self.yaw_rel_bias:+.1f}°, Pelvis {self.pel_yaw_bias:+.1f}°")
 
-        # CRITICAL: Attempt to reload the main module after successful calibration
+        # Attempt to reload the main module after successful calibration
         try:
             importlib.reload(sys.modules['imu_main_controller'])
         except Exception as e:
@@ -255,8 +231,10 @@ class TrunkRotationLogic:
 
     def analyze_performance(self, raw_data_dict):
         """
-        Runs the full state machine for real-time per-turn feedback.
+        Runs the state machine simplified to check ONLY for rotation depth.
         """
+        print("[TRUNK DEBUG] Entered analyze_performance.", flush=True) 
+        
         # CRITICAL CHECK: Block analysis until calibration is finished
         if not self.calibration_finished:
             # Attempt to finalize calibration if we missed the CALIBRATION state transition
@@ -264,15 +242,15 @@ class TrunkRotationLogic:
                 self._finalize_calibration()
                 self.calibration_finished = True
             else:
-                # Still waiting for calibration to finish
-                # print(f"[ANALYSIS BLOCK] Waiting for calibration to complete ({time.perf_counter() - self.calib_start_time:.2f}s / {CALIBRATION_SECONDS}s)...")
+                print(f"[ANALYSIS BLOCK] Waiting for calibration to complete.")
                 return None
                 
-        # Data check: REQUIRES both Upper and Pelvis data
+        # Data check
         if PELVIS_ID not in raw_data_dict or UPPER_ID not in raw_data_dict:
+            print(f"[ANALYSIS SKIP] Missing IMU data ({PELVIS_ID} or {UPPER_ID}).")
             return None 
             
-        # Data extraction and bias application
+        # --- Data extraction and movement check ---
         acc_u = np.array([raw_data_dict[UPPER_ID]['accel_x'], raw_data_dict[UPPER_ID]['accel_y'], raw_data_dict[UPPER_ID]['accel_z']])
         gyr_u = np.radians(np.array([raw_data_dict[UPPER_ID]['gyr_x'], raw_data_dict[UPPER_ID]['gyr_y'], raw_data_dict[UPPER_ID]['gyr_z']]))
         acc_p = np.array([raw_data_dict[PELVIS_ID]['accel_x'], raw_data_dict[PELVIS_ID]['accel_y'], raw_data_dict[PELVIS_ID]['accel_z']])
@@ -291,17 +269,12 @@ class TrunkRotationLogic:
         # Relative orientation and Axial Angle
         q_rel = quat_mul(self.q_u, quat_conj(self.q_p))
         r_rel, p_rel, _ = euler_zyx(q_rel)
-        _, _, yaw_p = euler_zyx(self.q_p)
-        
         spine_axis_body = np.array([1.0, 0.0, 0.0])
         spine_axis_world = Rp @ spine_axis_body
         axial_geom = axial_angle_about_axis(q_rel, spine_axis_world)
         
         # Bias-corrected and Fused Angle
         axial_bc_raw = angle_wrap_deg(axial_geom - self.yaw_rel_bias)
-        y_pel_dev = angle_wrap_deg(yaw_p - self.pel_yaw_bias)
-        p_rel_dev = p_rel - self.p_rel_bias
-        r_rel_dev = r_rel - self.r_rel_bias
         
         # Wall-clock dt
         t_now = time.perf_counter()
@@ -336,19 +309,16 @@ class TrunkRotationLogic:
         if dt > 0.0 and self.last_yaw is not None:
             yaw_vel_dps = (axial_fused - self.last_yaw) / dt
         self.last_yaw = axial_fused
-
-        # ---- Quality & Violation Check ----
-        abs_axial = abs(axial_fused)
-        too_fast_now = abs(yaw_vel_dps) > MAX_YAW_SPEED_DPS
-
-        bending_now = (abs(p_rel_dev) > MAX_COMP_ANGLE_DEG or abs(r_rel_dev) > MAX_COMP_ANGLE_DEG)
-        pelvis_violation_now = abs(y_pel_dev) > MAX_PELVIS_DRIFT_DEG
         
-        # ---- REAL-TIME per-turn feedback state machine (CRITICALLY MODIFIED) ----
+        abs_axial = abs(axial_fused)
+        
+        # --- End of Calculations ---
         
         feedback_event = None
         t_now_wall = time.perf_counter()
         time_since_fb = t_now_wall - self.turn_state_last_fb_t
+        
+        # --- STATE MACHINE (Simplified) ---
         
         if abs_axial > DIR_MIN_DEG and moving:
             current_dir = 1 if axial_fused >= 0 else -1
@@ -357,7 +327,7 @@ class TrunkRotationLogic:
             if self.turn_state_dir == 0 or current_dir != self.turn_state_dir:
                 self.turn_state_dir = current_dir
                 self.turn_state_last_fb_t = -1e9 # Allow immediate feedback
-                self.warned_speed_this_turn = self.warned_bend_this_turn = self.warned_pelvis_this_turn = self.warned_depth_this_turn = False
+                self.warned_depth_this_turn = False 
 
             # Decide if it's time to say something (rate limit)
             if time_since_fb >= TURN_FEEDBACK_INTERVAL_S:
@@ -366,47 +336,34 @@ class TrunkRotationLogic:
 
                 same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
                 
-                # Priority: speed > bending > pelvis > depth
-                if too_fast_now and not self.warned_speed_this_turn:
-                    self.warned_speed_this_turn = True
-                    feedback_event = True # BAD
-                    
-                elif bending_now and not self.warned_bend_this_turn:
-                    self.warned_bend_this_turn = True
-                    feedback_event = True # BAD
-                    
-                elif pelvis_violation_now and not self.warned_pelvis_this_turn:
-                    self.warned_pelvis_this_turn = True
-                    feedback_event = True # BAD
-                    
-                elif (
+                # CHECK ONLY FOR DEPTH INSUFICIENCY
+                if (
                     same_direction_motion and 
                     abs_axial < DEPTH_WARN_FRACTION * target_for_dir and 
                     not self.warned_depth_this_turn
                 ):
                     self.warned_depth_this_turn = True
-                    feedback_event = True # BAD
+                    feedback_event = True # BAD: ROTATE FURTHER
                 
-                # CRITICAL FIX: Send only ONE event per rate-limited window
+                # Send the BAD event if collected
                 if feedback_event is not None:
-                    _send_feedback(True) # Send single BAD event
+                    _send_feedback(True)
                     self.turn_state_last_fb_t = t_now_wall
                     return True # BAD
 
         else:
-            # No longer clearly turning -> reset turn state
+            # No longer clearly turning -> check for rep completion
             if abs_axial < TURN_END_DEG and not moving:
-                # Check for successful REP completion (Side-specific targets)
                 up_th    = AXIAL_TARGET_RIGHT_DEG 
                 down_th  = -AXIAL_TARGET_LEFT_DEG 
                 
                 # If target was reached AND we are returning to center
-                if (axial_fused >= up_th or axial_fused <= down_th) and self.turn_state_dir != 0:
+                if self.turn_state_dir != 0:
                     _send_feedback(False) # Send GOOD event only once per successful rep
                     self.turn_state_dir = 0
                     return False # GOOD
 
                 self.turn_state_dir = 0
-                self.turn_state_last_fb_t = -1e9 # Allow immediate feedback
+                self.turn_state_last_fb_t = -1e9
 
-        return None # No event to send to Unity this frame
+        return None
