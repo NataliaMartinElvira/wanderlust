@@ -22,13 +22,11 @@ tcp_send_queue = Queue()
 
 # Map exercise names (received from Unity) to their corresponding logic classes
 try:
-    # Ensure these files exist in your directory
     from seated_march_logic import SeatedMarchLogic
-    from trunk_rotation_logic import TrunkRotationLogic # Placeholder, ensure file exists
-    from exercise_logic_template import ExerciseLogicTemplate # Placeholder, ensure file exists
+    from trunk_rotation_logic import TrunkRotationLogic 
+    from exercise_logic_template import ExerciseLogicTemplate 
 except ImportError as e:
-    print(f"Error: Could not import required logic modules. Make sure all .py files are in the same folder.")
-    print(f"Details: {e}")
+    print(f"Error: Could not import required logic modules. Details: {e}")
     sys.exit(1)
 
 LOGIC_MAP = {
@@ -144,7 +142,8 @@ class TcpListenerThread(threading.Thread):
                 print(f"[TCP SERVER WARNING] Unknown exercise logic requested: {exercise}")
         
         elif cmd_type == 'START_CALIBRATION':
-            # This is primarily used to tell Python to reset its buffer
+            # NOTE: We keep this command handler in case Unity still sends it, 
+            # but the main loop handles the state switch to CALIBRATION which now only runs the template.
             GLOBAL_STATE['current_exercise'] = 'CALIBRATION'
             tcp_send_queue.put("RESET_STEP_COUNTER\n") 
             print("[TCP SERVER] Command received: START_CALIBRATION (Resetting buffer)")
@@ -197,8 +196,7 @@ def main_loop():
     sys.modules['imu_main_controller'] = sys.modules[__name__]
 
     current_logic = LOGIC_MAP[current_logic_key]() 
-    last_feedback_good = False # Track last feedback state to avoid continuous GOOD spam
-
+    
     print("\n--- MAIN LOOP STARTED ---")
 
     # --- CONTROL AND EXECUTION LOOP ---
@@ -217,27 +215,25 @@ def main_loop():
             time.sleep(0.005)
             continue
         
-        # *** DEBUG PRINT KEY ***
-        print(f"[MAIN:LOOP] State: {GLOBAL_STATE['current_exercise']} | Logic: {current_logic.__class__.__name__} | Raw Data Keys: {raw_data.keys() if raw_data else 'None'}", flush=True)
-
         # 3.2. CRITICAL: IDLE STATE CHECK
         
         ACTIVE_EXERCISES = ['SEATED_MARCH', 'STANDING_MARCH', 'TRUNK_ROTATION']
         
         if GLOBAL_STATE['current_exercise'] == 'NONE':
-            last_feedback_good = False
             time.sleep(0.005)
             continue
 
         # 3.3. ACTIVE EXERCISE PHASE (CALIBRATION or EXERCISE)
         
-        # A) Explicit CALIBRATION handling (buffer reset)
+        # A) Explicit CALIBRATION handling (REMOVED BRANCH FOR CALIBRATION)
+        # NOTE: If Unity sends START_CALIBRATION, the state changes to 'CALIBRATION'
+        # and the code below will call current_logic.check_calmness.
+        
         if GLOBAL_STATE['current_exercise'] == 'CALIBRATION':
-            # Call check_calmness (designed to reset the buffer)
-            current_logic.check_calmness(raw_data) 
+            current_logic.check_calmness(raw_data)
             time.sleep(0.005)
-            continue # No feedback needed during calibration.
-
+            continue
+        
         # B) PERFORMANCE ANALYSIS (Only for exercise states)
         if GLOBAL_STATE['current_exercise'] in ACTIVE_EXERCISES:
             
@@ -249,13 +245,15 @@ def main_loop():
                 
                 feedback_is_bad = feedback_result
                 
-                if feedback_is_bad:
-                    send_to_unity("FEEDBACK:BAD") 
-                    last_feedback_good = False
-                else:
-                    if not last_feedback_good:
+                if current_logic_key == 'TRUNK_ROTATION':
+                    # TRUNK_ROTATION logic handles its own sending via _send_feedback.
+                    pass 
+                
+                else: # SEATED/STANDING MARCH
+                    if feedback_is_bad:
+                        send_to_unity("FEEDBACK:BAD") 
+                    else:
                         send_to_unity("FEEDBACK:GOOD") 
-                        last_feedback_good = True
         
         
         time.sleep(0.005) 
