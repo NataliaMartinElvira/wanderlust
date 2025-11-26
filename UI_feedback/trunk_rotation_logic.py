@@ -6,6 +6,7 @@ import warnings
 from ahrs.filters import Madgwick
 from scipy.signal import savgol_filter
 from datetime import datetime
+import importlib
 
 # --- CONFIG ---
 SAMPLE_HZ               = 50.0 # Assuming 50 Hz from other components
@@ -28,8 +29,8 @@ PELVIS_ID = "IMU_CH0"
 
 # Stillness gating (Zero-G based, assuming IMU is moving)
 STILL_GYR_DPS           = 2.5
-G_1G                    = 1.0 # Not used for acceleration magnitude stillness check
-ACC_STILL_TOL_G         = 0.1 # Tolerance for 0g
+G_1G                    = 1.0 
+ACC_STILL_TOL_G         = 0.1 
 
 # Relative-gyro fusion settings
 REL_LEAK_TAU_STILL_S    = 6.0    
@@ -81,7 +82,6 @@ def is_still(gyr_rad_s, acc_g):
     """Stillness test: low gyro magnitude + accel magnitude ~1g (for calib)."""
     gyr_dps = np.degrees(np.linalg.norm(gyr_rad_s))
     acc_mag = np.linalg.norm(acc_g)
-    # Check 1: Gyro is low. Check 2: Accel mag is close to 1G (or 0G if filtered). Assuming 1G for calib here.
     return (gyr_dps < STILL_GYR_DPS) and (abs(acc_mag - G_1G) <= ACC_STILL_TOL_G)
 
 def angle_wrap_deg(a):
@@ -103,20 +103,22 @@ def axial_angle_about_axis(q_rel, axis_world):
     return angle_wrap_deg(theta)
 
 # Helper for sending events through the main controller's queue
-def send_to_unity_internal(command):
-    if command:
+def _send_feedback(is_bad):
+    """ Helper to safely put commands into the sending queue of the main controller. """
+    command = "FEEDBACK:BAD" if is_bad else "FEEDBACK:GOOD"
+    try:
+        # We must call the send_to_unity function from the main controller module
         __import__('imu_main_controller').send_to_unity(command)
-
+    except Exception as e:
+        print(f"[INTERNAL SEND ERROR] Could not send {command}. {e}")
 
 # ---------- TrunkRotationLogic Class ----------
 
 class TrunkRotationLogic:
     """
     IMU logic handler for the Seated Trunk Rotation exercise.
-    This encapsulates the state machine logic from the original trunk rotation script.
     """
     def __init__(self):
-        # Suppress AHRS warnings related to quaternion initialization
         warnings.filterwarnings("ignore", category=RuntimeWarning)
         
         # Filter instances
@@ -141,6 +143,11 @@ class TrunkRotationLogic:
         self.gyr_u_cal = []
         self.gyr_p_cal = []
 
+        # --- NEW: Calibration state flags ---
+        self.calibration_started = False
+        self.calibration_finished = False
+        self.calib_start_time = 0.0
+        
         # Differential-gyro axial integrator state
         self.rel_axial_int = 0.0
         self.last_yaw = 0.0
@@ -169,6 +176,11 @@ class TrunkRotationLogic:
         if PELVIS_ID not in raw_data_dict or UPPER_ID not in raw_data_dict:
             return False
 
+        if not self.calibration_started:
+            self.calib_start_time = time.perf_counter()
+            self.calibration_started = True
+            print(f"[CALIB START] Calibration collection initiated at {self.calib_start_time}.")
+            
         # Assuming the reader provides gyros in dps
         acc_u = np.array([raw_data_dict[UPPER_ID]['accel_x'], raw_data_dict[UPPER_ID]['accel_y'], raw_data_dict[UPPER_ID]['accel_z']])
         gyr_u = np.radians(np.array([raw_data_dict[UPPER_ID]['gyr_x'], raw_data_dict[UPPER_ID]['gyr_y'], raw_data_dict[UPPER_ID]['gyr_z']]))
@@ -194,7 +206,7 @@ class TrunkRotationLogic:
         # Geometric axial angle
         axial_geom = axial_angle_about_axis(q_rel, spine_axis_world)
 
-        # Collect data for calibration biases (runs constantly during the fixed time window)
+        # Collect data for calibration biases 
         self.calib_coll_rel.append(axial_geom)
         self.calib_coll_pel.append(yaw_p)
         self.calib_coll_p_rel.append(p_rel)
@@ -202,7 +214,13 @@ class TrunkRotationLogic:
         self.gyr_u_cal.append(gyr_u)
         self.gyr_p_cal.append(gyr_p)
 
-        return False # Calibration done via fixed timer in Unity
+        # Check if enough time has passed
+        if time.perf_counter() - self.calib_start_time >= CALIBRATION_SECONDS:
+            if not self.calibration_finished:
+                self._finalize_calibration()
+                self.calibration_finished = True
+        
+        return False 
 
     def _finalize_calibration(self):
         """ Calculates and stores the final biases after the fixed calibration time. """
@@ -214,13 +232,11 @@ class TrunkRotationLogic:
         self.yaw_rel_bias = float(np.median(self.calib_coll_rel))
         self.pel_yaw_bias = float(np.median(self.calib_coll_pel))
 
-        # Use median of collected gyro data for bias estimation
         if self.gyr_u_cal:
             self.gyr_u_bias = np.median(np.vstack(self.gyr_u_cal), axis=0)
         if self.gyr_p_cal:
             self.gyr_p_bias = np.median(np.vstack(self.gyr_p_cal), axis=0)
 
-        # Relative posture baselines 
         self.p_rel_bias = float(np.median(self.calib_coll_p_rel))
         self.r_rel_bias = float(np.median(self.calib_coll_r_rel))
         
@@ -231,25 +247,37 @@ class TrunkRotationLogic:
         
         print(f"[CALIB SUCCESS] Finalized biases: Axial {self.yaw_rel_bias:+.1f}°, Pelvis {self.pel_yaw_bias:+.1f}°")
 
+        # CRITICAL: Attempt to reload the main module after successful calibration
+        try:
+            importlib.reload(sys.modules['imu_main_controller'])
+        except Exception as e:
+            print(f"[CALIB WARNING] Failed to reload main controller module: {e}")
+
     def analyze_performance(self, raw_data_dict):
         """
         Runs the full state machine for real-time per-turn feedback.
-        Returns: True if bad feedback is triggered, False if good feedback is triggered, None otherwise.
         """
-        # Ensure biases are calculated (i.e., check_calmness was called and time passed)
-        if self.yaw_rel_bias is None:
-            self._finalize_calibration()
-            
+        # CRITICAL CHECK: Block analysis until calibration is finished
+        if not self.calibration_finished:
+            # Attempt to finalize calibration if we missed the CALIBRATION state transition
+            if self.calibration_started and time.perf_counter() - self.calib_start_time >= CALIBRATION_SECONDS:
+                self._finalize_calibration()
+                self.calibration_finished = True
+            else:
+                # Still waiting for calibration to finish
+                # print(f"[ANALYSIS BLOCK] Waiting for calibration to complete ({time.perf_counter() - self.calib_start_time:.2f}s / {CALIBRATION_SECONDS}s)...")
+                return None
+                
         # Data check: REQUIRES both Upper and Pelvis data
         if PELVIS_ID not in raw_data_dict or UPPER_ID not in raw_data_dict:
             return None 
             
-        # Extract and prepare data (using dps from reader, converting to rad/s here)
+        # Data extraction and bias application
         acc_u = np.array([raw_data_dict[UPPER_ID]['accel_x'], raw_data_dict[UPPER_ID]['accel_y'], raw_data_dict[UPPER_ID]['accel_z']])
         gyr_u = np.radians(np.array([raw_data_dict[UPPER_ID]['gyr_x'], raw_data_dict[UPPER_ID]['gyr_y'], raw_data_dict[UPPER_ID]['gyr_z']]))
         acc_p = np.array([raw_data_dict[PELVIS_ID]['accel_x'], raw_data_dict[PELVIS_ID]['accel_y'], raw_data_dict[PELVIS_ID]['accel_z']])
         gyr_p = np.radians(np.array([raw_data_dict[PELVIS_ID]['gyr_x'], raw_data_dict[PELVIS_ID]['gyr_y'], raw_data_dict[PELVIS_ID]['gyr_z']]))
-
+            
         # Apply Gyro Biases and Update Filters
         g_u_biased = gyr_u - self.gyr_u_bias
         g_p_biased = gyr_p - self.gyr_p_bias
@@ -260,7 +288,7 @@ class TrunkRotationLogic:
         Ru = quat_to_R(self.q_u)
         Rp = quat_to_R(self.q_p)
         
-        # ---- Relative orientation and Axial Angle ----
+        # Relative orientation and Axial Angle
         q_rel = quat_mul(self.q_u, quat_conj(self.q_p))
         r_rel, p_rel, _ = euler_zyx(q_rel)
         _, _, yaw_p = euler_zyx(self.q_p)
@@ -313,11 +341,10 @@ class TrunkRotationLogic:
         abs_axial = abs(axial_fused)
         too_fast_now = abs(yaw_vel_dps) > MAX_YAW_SPEED_DPS
 
-        # Use raw deviations for immediate bad feedback
         bending_now = (abs(p_rel_dev) > MAX_COMP_ANGLE_DEG or abs(r_rel_dev) > MAX_COMP_ANGLE_DEG)
         pelvis_violation_now = abs(y_pel_dev) > MAX_PELVIS_DRIFT_DEG
         
-        # ---- REAL-TIME per-turn feedback state machine ----
+        # ---- REAL-TIME per-turn feedback state machine (CRITICALLY MODIFIED) ----
         
         feedback_event = None
         t_now_wall = time.perf_counter()
@@ -337,24 +364,20 @@ class TrunkRotationLogic:
                 dir_sign = self.turn_state_dir
                 target_for_dir = AXIAL_TARGET_RIGHT_DEG if dir_sign > 0 else AXIAL_TARGET_LEFT_DEG
 
-                # Is the motion currently going deeper into this side?
                 same_direction_motion = (yaw_vel_dps * dir_sign) > MIN_DEPTH_VEL_DPS
                 
                 # Priority: speed > bending > pelvis > depth
                 if too_fast_now and not self.warned_speed_this_turn:
                     self.warned_speed_this_turn = True
                     feedback_event = True # BAD
-                    send_to_unity_internal("FEEDBACK:BAD")
                     
                 elif bending_now and not self.warned_bend_this_turn:
                     self.warned_bend_this_turn = True
                     feedback_event = True # BAD
-                    send_to_unity_internal("FEEDBACK:BAD") # (UPRIGHT)
                     
                 elif pelvis_violation_now and not self.warned_pelvis_this_turn:
                     self.warned_pelvis_this_turn = True
                     feedback_event = True # BAD
-                    send_to_unity_internal("FEEDBACK:BAD") # (HIPS_STILL)
                     
                 elif (
                     same_direction_motion and 
@@ -363,40 +386,27 @@ class TrunkRotationLogic:
                 ):
                     self.warned_depth_this_turn = True
                     feedback_event = True # BAD
-                    send_to_unity_internal("FEEDBACK:BAD") # (ROTATE_FURTHER)
                 
-                # If any BAD event was generated, update the last feedback time
+                # CRITICAL FIX: Send only ONE event per rate-limited window
                 if feedback_event is not None:
+                    _send_feedback(True) # Send single BAD event
                     self.turn_state_last_fb_t = t_now_wall
-                    return feedback_event # True (BAD)
+                    return True # BAD
 
         else:
             # No longer clearly turning -> reset turn state
             if abs_axial < TURN_END_DEG and not moving:
+                # Check for successful REP completion (Side-specific targets)
+                up_th    = AXIAL_TARGET_RIGHT_DEG 
+                down_th  = -AXIAL_TARGET_LEFT_DEG 
+                
+                # If target was reached AND we are returning to center
+                if (axial_fused >= up_th or axial_fused <= down_th) and self.turn_state_dir != 0:
+                    _send_feedback(False) # Send GOOD event only once per successful rep
+                    self.turn_state_dir = 0
+                    return False # GOOD
+
                 self.turn_state_dir = 0
                 self.turn_state_last_fb_t = -1e9 # Allow immediate feedback
-                # Send GOOD feedback if the turn was completed without error
-                send_to_unity_internal("FEEDBACK:GOOD") 
-                return False # GOOD
-
-        # Check for successful REP completion (Side-specific targets)
-        up_th    = AXIAL_TARGET_RIGHT_DEG 
-        down_th  = -AXIAL_TARGET_LEFT_DEG 
-        
-        if axial_fused >= up_th or axial_fused <= down_th:
-            # If target reached, and no BAD feedback was generated, send GOOD event once
-            if self.turn_state_dir != 0:
-                self.turn_state_dir = 0 # Force reset turn state
-                send_to_unity_internal("FEEDBACK:GOOD")
-                return False
 
         return None # No event to send to Unity this frame
-
-# --- Internal Send Helper (avoids conflict with main thread) ---
-def send_to_unity_internal(command):
-    """ Helper to safely put commands into the sending queue of the main controller. """
-    # We must call the send_to_unity function from the main controller module
-    try:
-        __import__('imu_main_controller').send_to_unity(command)
-    except Exception as e:
-        print(f"[INTERNAL SEND ERROR] Could not send {command}. {e}")

@@ -7,9 +7,8 @@ import sys
 
 # --- COMMUNICATION CONFIGURATION WITH UNITY ---
 UNITY_IP = '127.0.0.1'
-UNITY_FEEDBACK_PORT = 5001     # Python SENDS FEEDBACK here
-PYTHON_COMMAND_PORT = 5004     # Python RECEIVES COMMANDS here
-FEEDBACK_INTERVAL_SECONDS = 0.01 
+UNITY_FEEDBACK_PORT = 5001     # Python SENDS FEEDBACK here (Client)
+PYTHON_COMMAND_PORT = 5004     # Python RECEIVES COMMANDS here (Server)
 
 # --- GLOBAL STATE ---
 GLOBAL_STATE = {
@@ -22,13 +21,11 @@ tcp_send_queue = Queue()
 
 # Map exercise names (received from Unity) to their corresponding logic classes
 try:
-    # Ensure these files exist in your directory
     from seated_march_logic import SeatedMarchLogic
-    from trunk_rotation_logic import TrunkRotationLogic # Placeholder, ensure file exists
-    from exercise_logic_template import ExerciseLogicTemplate # Placeholder, ensure file exists
+    from trunk_rotation_logic import TrunkRotationLogic 
+    from exercise_logic_template import ExerciseLogicTemplate 
 except ImportError as e:
-    print(f"Error: Could not import required logic modules. Make sure all .py files are in the same folder.")
-    print(f"Details: {e}")
+    print(f"Error: Could not import required logic modules. Details: {e}")
     sys.exit(1)
 
 LOGIC_MAP = {
@@ -42,7 +39,7 @@ LOGIC_MAP = {
 # --- TCP CLIENT (SENDER) ---
 
 class TcpClientThread(threading.Thread):
-    """ Handles connection and sending of feedback (FEEDBACK:BAD, CALIB:DONE) to Unity. """
+    """ Handles connection and sending of feedback to Unity (Python is Client). """
     def __init__(self, ip, port, state):
         threading.Thread.__init__(self)
         self.ip = ip
@@ -68,12 +65,10 @@ class TcpClientThread(threading.Thread):
                     message = tcp_send_queue.get()
                     if message:
                         self.socket.sendall(message.encode('utf-8'))
-                        # Debugging: print(f"[TCP SENT] -> {message.strip()}")
                 
                 time.sleep(0.01)
 
             except socket.error as e:
-                # Expected when Unity closes the server
                 if e.errno == 32: # Broken pipe
                     print("[TCP CLIENT ERROR] Socket error: Broken pipe. Disconnected.")
                 else:
@@ -88,7 +83,7 @@ class TcpClientThread(threading.Thread):
 # --- TCP SERVER (RECEIVER) ---
 
 class TcpListenerThread(threading.Thread):
-    """ Handles listening for state commands sent FROM Unity (Python is the Server). """
+    """ Handles listening for state commands sent FROM Unity (Python is Server). """
     def __init__(self, ip, port, state):
         threading.Thread.__init__(self)
         self.ip = ip
@@ -135,16 +130,13 @@ class TcpListenerThread(threading.Thread):
         if cmd_type == 'SET_EXERCISE' and len(parts) > 1:
             exercise = parts[1].strip().upper()
             if exercise in LOGIC_MAP:
-                # When receiving SET_EXERCISE, always reset current state
                 GLOBAL_STATE['current_exercise'] = exercise
-                # Send explicit reset to trigger the clearing of the step counter on the next loop
                 tcp_send_queue.put("RESET_STEP_COUNTER\n") 
                 print(f"[TCP SERVER] State change received: SET_EXERCISE to {exercise}")
             else:
                 print(f"[TCP SERVER WARNING] Unknown exercise logic requested: {exercise}")
         
         elif cmd_type == 'START_CALIBRATION':
-            # This is primarily used to tell Python to reset its buffer
             GLOBAL_STATE['current_exercise'] = 'CALIBRATION'
             tcp_send_queue.put("RESET_STEP_COUNTER\n") 
             print("[TCP SERVER] Command received: START_CALIBRATION (Resetting buffer)")
@@ -164,7 +156,6 @@ def main_loop():
     """ 
     Main program loop that reads IMUs and applies exercise logic based on Unity state.
     """
-    # Assuming this module exists and works.
     try:
         from arduino_imu_reader import ArduinoIMUReader 
     except ImportError:
@@ -175,14 +166,13 @@ def main_loop():
     imu_reader = ArduinoIMUReader(port='/dev/tty.usbserial-58550220231', baudrate=115200) 
     imu_reader.connect_imus()
     
-    # 2. START TCP THREADS (Client for sending to 5001, Server for receiving on 5004)
+    # 2. START TCP THREADS 
     tcp_send_thread = TcpClientThread(UNITY_IP, UNITY_FEEDBACK_PORT, GLOBAL_STATE)
     tcp_listen_thread = TcpListenerThread(UNITY_IP, PYTHON_COMMAND_PORT, GLOBAL_STATE)
     
     tcp_send_thread.start()
     tcp_listen_thread.start()
 
-    # Wait until the sending connection is established
     while not tcp_send_thread.is_connected and not GLOBAL_STATE['stop_threads']:
         time.sleep(0.5)
 
@@ -193,18 +183,19 @@ def main_loop():
     # 3. LOGIC INSTANCE MANAGEMENT
     current_logic_key = 'NONE'
     
-    # Add imu_main_controller to sys.modules so the logic file can find GLOBAL_STATE
+    # CRITICAL: Add imu_main_controller to sys.modules for dynamic access from logic files
     sys.modules['imu_main_controller'] = sys.modules[__name__]
 
     current_logic = LOGIC_MAP[current_logic_key]() 
-    last_feedback_good = False # Track last feedback state to avoid continuous GOOD spam
-
+    
+    # NOTE: We rely on Unity to manage audio priority. No global feedback cooldown needed here.
+    
     print("\n--- MAIN LOOP STARTED ---")
 
     # --- CONTROL AND EXECUTION LOOP ---
     while not GLOBAL_STATE['stop_threads']:
         
-        # Check if the required logic module has changed (received via TcpListenerThread)
+        # Check if the required logic module has changed
         if GLOBAL_STATE['current_exercise'] != current_logic_key:
             current_logic_key = GLOBAL_STATE['current_exercise']
             current_logic = LOGIC_MAP.get(current_logic_key, LOGIC_MAP['NONE'])()
@@ -217,31 +208,26 @@ def main_loop():
             time.sleep(0.005)
             continue
         
-        # *** DEBUG PRINT KEY ***
-        print(f"[MAIN:LOOP] State: {GLOBAL_STATE['current_exercise']} | Logic: {current_logic.__class__.__name__} | Raw Data Keys: {raw_data.keys() if raw_data else 'None'}", flush=True)
-
-        # 3.2. CRITICAL: IDLE STATE CHECK
-        
+        # 3.2. IDLE STATE CHECK
         ACTIVE_EXERCISES = ['SEATED_MARCH', 'STANDING_MARCH', 'TRUNK_ROTATION']
         
         if GLOBAL_STATE['current_exercise'] == 'NONE':
-            last_feedback_good = False
             time.sleep(0.005)
             continue
 
-        # 3.3. ACTIVE EXERCISE PHASE (CALIBRATION or EXERCISE)
+        # 3.3. ACTIVE EXERCISE PHASE
         
-        # A) Explicit CALIBRATION handling (buffer reset)
+        # A) Explicit CALIBRATION handling
         if GLOBAL_STATE['current_exercise'] == 'CALIBRATION':
-            # Call check_calmness (designed to reset the buffer)
             current_logic.check_calmness(raw_data) 
             time.sleep(0.005)
-            continue # No feedback needed during calibration.
+            continue 
 
         # B) PERFORMANCE ANALYSIS (Only for exercise states)
         if GLOBAL_STATE['current_exercise'] in ACTIVE_EXERCISES:
             
-            # CRITICAL CALL TO ANALYZE_PERFORMANCE
+            # analyze_performance handles its own rate limiting (Trunk Rotation) 
+            # OR relies on the event-based detection (Seated March)
             feedback_result = current_logic.analyze_performance(raw_data)
             
             # b) Send command to Unity ONLY if an event happened
@@ -249,13 +235,23 @@ def main_loop():
                 
                 feedback_is_bad = feedback_result
                 
-                if feedback_is_bad:
-                    send_to_unity("FEEDBACK:BAD") 
-                    last_feedback_good = False
-                else:
-                    if not last_feedback_good:
+                # NOTE: For SEATED_MARCH, we rely on the internal logic to rate-limit GOOD
+                # For TRUNK_ROTATION, the logic sends the command directly via _send_feedback.
+                # Here, we only handle the *event* coming from SEATED_MARCH (True/False/None return).
+                
+                if current_logic_key == 'TRUNK_ROTATION':
+                    # TRUNK_ROTATION logic handles its own sending via _send_feedback.
+                    # We only return the result here, but the send has already happened inside analyze_performance.
+                    # This branch is for completeness/future logging only.
+                    pass 
+                
+                else: # SEATED/STANDING MARCH
+                    # Simplified sending logic for marching events
+                    if feedback_is_bad:
+                        send_to_unity("FEEDBACK:BAD") 
+                        # We don't track last_feedback_good here, relying on Unity's audio lock
+                    else:
                         send_to_unity("FEEDBACK:GOOD") 
-                        last_feedback_good = True
         
         
         time.sleep(0.005) 

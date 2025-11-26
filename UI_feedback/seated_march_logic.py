@@ -9,12 +9,12 @@ import sys
 # CONFIG AND CONSTANTS
 # =========================
 FS = 50.0 
-LOW, HIGH, ORDER = 0.25, 2.5, 4
+LOW, HIGH, ORDER = 0.5, 2.0, 4
 VM_PEAK_THR_G = 0.01   # Candidate peak threshold (Ajustado)
-MAX_STEP_RATE_SPM = 35   
+MAX_STEP_RATE_SPM = 35  
 MIN_STEP_S = 2.0         
 MAX_STEP_S = 4.0         
-COACH_MIN_AMP_G = 0.03   # Umbral de "buen ejercicio"
+COACH_MIN_AMP_G = 0.02   # Umbral de "buen ejercicio"
 BILATERAL_FACTOR = 2.0
 SINGLE_IMU_ONE_LEG = True
 
