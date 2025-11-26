@@ -5,13 +5,13 @@ from queue import Queue
 import importlib
 import sys
 
-# --- CONFIGURACIÓN DE COMUNICACIÓN CON UNITY ---
+# --- COMMUNICATION CONFIGURATION WITH UNITY ---
 UNITY_IP = '127.0.0.1'
 UNITY_FEEDBACK_PORT = 5001     # Python SENDS FEEDBACK here
 PYTHON_COMMAND_PORT = 5004     # Python RECEIVES COMMANDS here
 FEEDBACK_INTERVAL_SECONDS = 0.01 
 
-# --- ESTADO GLOBAL ---
+# --- GLOBAL STATE ---
 GLOBAL_STATE = {
     'current_exercise': 'NONE', 
     'stop_threads': False
@@ -22,9 +22,10 @@ tcp_send_queue = Queue()
 
 # Map exercise names (received from Unity) to their corresponding logic classes
 try:
+    # Ensure these files exist in your directory
     from seated_march_logic import SeatedMarchLogic
-    from trunk_rotation_logic import TrunkRotationLogic
-    from exercise_logic_template import ExerciseLogicTemplate
+    from trunk_rotation_logic import TrunkRotationLogic # Placeholder, ensure file exists
+    from exercise_logic_template import ExerciseLogicTemplate # Placeholder, ensure file exists
 except ImportError as e:
     print(f"Error: Could not import required logic modules. Make sure all .py files are in the same folder.")
     print(f"Details: {e}")
@@ -34,7 +35,7 @@ LOGIC_MAP = {
     'SEATED_MARCH': SeatedMarchLogic,
     'TRUNK_ROTATION': TrunkRotationLogic, 
     'STANDING_MARCH': SeatedMarchLogic, 
-    'CALIBRATION': ExerciseLogicTemplate, # Use ExerciseLogicTemplate for CALIB
+    'CALIBRATION': ExerciseLogicTemplate, 
     'NONE': ExerciseLogicTemplate 
 }
 
@@ -163,8 +164,13 @@ def main_loop():
     """ 
     Main program loop that reads IMUs and applies exercise logic based on Unity state.
     """
-    from arduino_imu_reader import ArduinoIMUReader 
-    
+    # Assuming this module exists and works.
+    try:
+        from arduino_imu_reader import ArduinoIMUReader 
+    except ImportError:
+        print("[ERROR] arduino_imu_reader not found. Cannot proceed without IMU data source.")
+        return
+
     # 1. INITIALIZE ARDUINO/IMU
     imu_reader = ArduinoIMUReader(port='/dev/tty.usbserial-58550220231', baudrate=115200) 
     imu_reader.connect_imus()
@@ -186,6 +192,10 @@ def main_loop():
 
     # 3. LOGIC INSTANCE MANAGEMENT
     current_logic_key = 'NONE'
+    
+    # Add imu_main_controller to sys.modules so the logic file can find GLOBAL_STATE
+    sys.modules['imu_main_controller'] = sys.modules[__name__]
+
     current_logic = LOGIC_MAP[current_logic_key]() 
     last_feedback_good = False # Track last feedback state to avoid continuous GOOD spam
 
@@ -207,7 +217,7 @@ def main_loop():
             time.sleep(0.005)
             continue
         
-        # *** DEBUG PRINT CLAVE ***
+        # *** DEBUG PRINT KEY ***
         print(f"[MAIN:LOOP] State: {GLOBAL_STATE['current_exercise']} | Logic: {current_logic.__class__.__name__} | Raw Data Keys: {raw_data.keys() if raw_data else 'None'}", flush=True)
 
         # 3.2. CRITICAL: IDLE STATE CHECK
@@ -223,15 +233,15 @@ def main_loop():
         
         # A) Explicit CALIBRATION handling (buffer reset)
         if GLOBAL_STATE['current_exercise'] == 'CALIBRATION':
-            # Llamamos a check_calmness, que está diseñado para resetear el buffer
-            # y prepara la lógica para el siguiente ejercicio.
+            # Call check_calmness (designed to reset the buffer)
             current_logic.check_calmness(raw_data) 
             time.sleep(0.005)
-            continue # No hay feedback que enviar en este estado.
+            continue # No feedback needed during calibration.
 
         # B) PERFORMANCE ANALYSIS (Only for exercise states)
         if GLOBAL_STATE['current_exercise'] in ACTIVE_EXERCISES:
             
+            # CRITICAL CALL TO ANALYZE_PERFORMANCE
             feedback_result = current_logic.analyze_performance(raw_data)
             
             # b) Send command to Unity ONLY if an event happened
