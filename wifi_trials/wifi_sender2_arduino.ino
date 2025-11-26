@@ -3,29 +3,29 @@
 #include <Wire.h>
 #include <ICM20948_WE.h>
 
-// ------------------------------------------------------------
-// HARDWARE SETTINGS (HUZZAH32 + PCA9546A)
-// ------------------------------------------------------------
+
+// SETTINGS (HUZZAH32 + PCA9546A)
+
 #define NODE_ID 2
 #define SDA_PIN 23
 #define SCL_PIN 22
 
-// PCA9546A Multiplexer Address
+// Multiplexer Address
 #define PCA9546A_ADDR 0x70 
 
-// IMU Address (Both are 0x69, separated by Mux)
+// IMU Address 
 #define ICM20948_ADDR 0x69
 
-// Create Objects
+
 ICM20948_WE imu_ch0(ICM20948_ADDR); // Connected to Mux Channel 0
 ICM20948_WE imu_ch3(ICM20948_ADDR); // Connected to Mux Channel 3
 
-// Receiver MAC address (MUST MATCH YOUR RECEIVER)
+// Receiver MAC address 
 uint8_t broadcastAddress[] = {0x10, 0x06, 0x1C, 0x18, 0x69, 0x00};
 
-// ------------------------------------------------------------
+
 // V2 DATA STRUCTURE (Large Packet for 2 IMUs)
-// ------------------------------------------------------------
+
 typedef struct struct_message_v2 {
   int id;
   unsigned long timestamp;
@@ -41,9 +41,9 @@ typedef struct struct_message_v2 {
 
 struct_message_v2 myData;
 
-// ------------------------------------------------------------
+
 // MULTIPLEXER HELPER FUNCTIONS
-// ------------------------------------------------------------
+
 static inline bool pcaSelect(uint8_t channel) {
   if (channel > 3) return false;
   Wire.beginTransmission(PCA9546A_ADDR);
@@ -59,17 +59,14 @@ static inline void pcaDisableAll() {
   Wire.endTransmission();
 }
 
-// ------------------------------------------------------------
-// ESP-NOW CALLBACK
-// ------------------------------------------------------------
+
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  // Optional debug
-  // if (status != ESP_NOW_SEND_SUCCESS) Serial.println("Send Fail");
+  
 }
 
-// ------------------------------------------------------------
+
 // SETUP
-// ------------------------------------------------------------
+
 void setup() {
   Serial.begin(115200);
   delay(500);
@@ -86,7 +83,7 @@ void setup() {
   }
   esp_now_register_send_cb(OnDataSent);
 
-  // 3. Register Peer
+
   esp_now_peer_info_t peerInfo = {};
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
   peerInfo.channel = 0;  
@@ -115,9 +112,7 @@ void setup() {
   pcaDisableAll();
 }
 
-// ------------------------------------------------------------
-// MAIN LOOP
-// ------------------------------------------------------------
+
 void loop() {
   unsigned long t = millis();
 
@@ -137,7 +132,7 @@ void loop() {
   float pitch2 = imu_ch3.getPitch();
   float roll2  = imu_ch3.getRoll();
 
-  pcaDisableAll(); // Good practice to release bus
+  pcaDisableAll(); 
 
   // --- PACK DATA ---
   myData.id = NODE_ID;
@@ -167,7 +162,7 @@ void loop() {
   // The receiver will detect the larger packet size and treat it as V2
   esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
 
-  // Optional: Print for local debug
+  
   
   Serial.print("Sent V2 Packet. Pitch1: ");
   Serial.print(pitch1);
